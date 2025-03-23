@@ -5,6 +5,7 @@ package org.cloudbus.cloudsim.examples;
 import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.MyChange.*;
+import org.cloudbus.cloudsim.MyChange.PowerModelRamDynamic;
 import org.cloudbus.cloudsim.power.*;
 import org.cloudbus.cloudsim.power.models.*;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
