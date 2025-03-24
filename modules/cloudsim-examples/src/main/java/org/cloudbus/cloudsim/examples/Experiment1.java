@@ -108,7 +108,8 @@ public class Experiment1 {
                             peList,
                             new VmSchedulerTimeShared(peList),
                             new PowerModelSpecPowerHpProLiantMl110G3PentiumD930(),
-                            new PowerModelRamDynamic(50, 0.2, 10, 5)
+                            //new PowerModelRamDynamic(50, 0.2, 10, 5)
+                            new PowerModelLinear(50, 0.3)
                     )
             );
         }
@@ -135,7 +136,8 @@ public class Experiment1 {
                             peList,
                             new VmSchedulerTimeShared(peList),
                             new PowerModelSpecPowerHpProLiantMl110G4Xeon3040(),
-                            new PowerModelRamDynamic(50, 0.2, 10, 5)
+                            //new PowerModelRamDynamic(50, 0.2, 10, 5)
+                            new PowerModelLinear(50, 0.3)
                     )
             );
         }
@@ -162,7 +164,8 @@ public class Experiment1 {
                             peList,
                             new VmSchedulerTimeShared(peList),
                             new PowerModelSpecPowerHpProLiantMl110G5Xeon3075(),
-                            new PowerModelRamDynamic(50, 0.2, 10, 5)
+                            //new PowerModelRamDynamic(50, 0.2, 10, 5)
+                            new PowerModelLinear(50, 0.3)
                     )
             );
         }
@@ -203,7 +206,8 @@ public class Experiment1 {
                             peList,
                             new VmSchedulerTimeShared(peList),
                             new PowerModelLinearCelsiusV80AMDOpteron2218(maxPower, staticPowerPercentage, frequecies, voltages),
-                            new PowerModelRamDynamic(50, 0.2, 10, 5)
+                            //new PowerModelRamDynamic(50, 0.2, 10, 5)
+                            new PowerModelLinear(50, 0.3)
                     )
             );
         }
