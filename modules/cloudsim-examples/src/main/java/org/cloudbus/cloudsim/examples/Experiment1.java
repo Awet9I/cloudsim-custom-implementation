@@ -562,7 +562,7 @@ public class Experiment1 {
                 System.err.println("Can't create file");
             }
             //String msg = "time;datacenter_name;host_id;type;active;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;ram;available_ram;bw;available_bw;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
-            String msg = "time;datacenter_id;datacenter_name;host_id;type;active;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;dvfs_available;frequency_range;voltage_range;ram;available_ram;ram_utilization;ram_power;bw;available_bw;storage;available_storage;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
+            String msg = "time;datacenter_id;datacenter_name;host_id;type;active;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;dvfs_available;frequency_range;voltage_range;cpu_utilization;cpu_power;ram;available_ram;ram_utilization;ram_power;bw;available_bw;storage;available_storage;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
 
 
             HashMap<Integer, Integer> vm_ram_map = new HashMap<>();
@@ -685,15 +685,27 @@ public class Experiment1 {
                                 }
 
                                 String peUtilizationInfo = "";
+                                double cpuUtilization = 0.0; 
+                                double allocated_mips = 0.0;
+                                double total_mips = 0.0;
                                 int freePes = 0;
                                 for (PeEntry peEntry : ((MyPowerHostEntry) entry).getPeEntries()){
                                     if(peEntry.getAvailableMIPS() == peEntry.getMaxMIPS()){
                                         freePes++;
                                     }
-                                    peUtilizationInfo += peEntry.getMaxMIPS() + "," + peEntry.getAvailableMIPS() + ":";
+                                    peUtilizationInfo += peEntry.getMaxMIPS() + "," + peEntry.getAvailableMIPS
+                                    () + ":";
+
+                                    total_mips += peEntry.getMaxMIPS();
+
+                                    allocated_mips += (peEntry.getMaxMIPS() - peEntry.getAvailableMIPS());
+
+                                    
                                 }
 
                                 if(entry.isActive()){
+
+                                    cpuUtilization = allocated_mips / total_mips;
 
 
                                      Log.print(
@@ -707,8 +719,8 @@ public class Experiment1 {
                                         ", Total MIPS: " + host.getTotalMips() +
                                         ", Available MIPS: " + (host.getTotalMips() - entry.getAllocatedMips()) +
                                         ", PE Utilization: " + peUtilizationInfo +
-                                        //", CPU Utilization: " + cpuUtilization +
-                                        //", Total Energy CPU: " + totalPower +
+                                        ", CPU Utilization: " + cpuUtilization+
+                                        ", Total Energy CPU: " + ((MyPowerHost) host ).getPowerModel().getPower(cpuUtilization) +
                                         ", DVFS: " + dvfs +
                                         ", Frequency Range: " + frequencyRange +
                                         ", Voltage Range: " + voltageRange +
@@ -728,7 +740,7 @@ public class Experiment1 {
                                     );
 
                                 //msg += entry.getTime() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" + host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency
-                                msg += entry.getTime() + ";" + datacenter.getId() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + dvfs + ";" + frequencyRange + ";" + voltageRange + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" +  ((MyPowerHostEntry) entry).getRamUtilization() + ";" + ((MyPowerHost) host ).getPowerModelRam().getPower(((MyPowerHostEntry) entry).getRamUtilization()) + ";"+ host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + ((MyPowerHost) host).getStorageSize() + ";" + (((MyPowerHost) host).getStorageSize() - ((MyPowerHostEntry) entry).getAllocatedStorage()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency 
+                                msg += entry.getTime() + ";" + datacenter.getId() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + dvfs + ";" + frequencyRange + ";" + voltageRange + ";" +  cpuUtilization + ";" + ((MyPowerHost) host ).getPowerModel().getPower(cpuUtilization) + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" +  ((MyPowerHostEntry) entry).getRamUtilization() + ";" + ((MyPowerHost) host ).getPowerModelRam().getPower(((MyPowerHostEntry) entry).getRamUtilization()) + ";"+ host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + ((MyPowerHost) host).getStorageSize() + ";" + (((MyPowerHost) host).getStorageSize() - ((MyPowerHostEntry) entry).getAllocatedStorage()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency 
 
                                 }
 
