@@ -43,44 +43,52 @@ import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
          super(name);
      }
  
-    @Override
-    protected void processVmCreate(SimEvent ev) {
-            int[] data = (int[]) ev.getData();
-            int datacenterId = data[0];
-            int vmId = data[1];
-            int result = data[2];
-
-            Vm vm = VmList.getById(getVmList(), vmId);
-
-            if (result == CloudSimTags.TRUE) {
-                getVmsCreatedList().add(vm);
-                getVmsToDatacentersMap().put(vm.getId(), datacenterId);
-                getDatacenterRequestedIdsList().add(datacenterId);
-                Log.printLine(CloudSim.clock() + ": " + getName() + ": VM #" + vmId +
-                        " created successfully in Datacenter #" + datacenterId);
-            } else {
-                Log.printLine(CloudSim.clock() + ": " + getName() + ": Failed to create VM #" + vmId +
-                        " in Datacenter #" + datacenterId);
-
-                // Try next available datacenter
-                boolean retryIssued = false;
-                for (int nextDcId : getDatacenterIdsList()) {
-                    if (!getDatacenterRequestedIdsList().contains(nextDcId)) {
-                        getDatacenterRequestedIdsList().add(nextDcId); // Prevent re-trying again
-                        createVmsInDatacenter(nextDcId);
-                        Log.printLine(getName() + ": Retrying VM creation in Datacenter #" + nextDcId);
-                        retryIssued = true;
-                        break;
-                    }
-                }
-
-                if (!retryIssued) {
-                    Log.printLine(getName() + ": No more datacenters available. VM #" + vmId +
-                            " could not be created anywhere.");
-                }
-            }
-
-        super.processVmCreate(ev);
-    }
- }
+     /*
+      * fully overriden methos to create vm and submit cloudlets to them
+      * enables resource aware vm allocation, 
+      * waits for all vm creation treis to be processed to submit cloudlets
+      */
+     @Override
+     protected void processVmCreate(SimEvent ev) {
+         int[] data = (int[]) ev.getData();
+         int datacenterId = data[0];
+         int vmId = data[1];
+         int result = data[2];
+     
+         Vm vm = VmList.getById(getVmList(), vmId);
+         incrementVmsAcks(); // must track this manually now
+     
+         if (result == CloudSimTags.TRUE) {
+             getVmsCreatedList().add(vm);
+             getVmsToDatacentersMap().put(vm.getId(), datacenterId);
+             getDatacenterRequestedIdsList().add(datacenterId);
+             Log.printLine(CloudSim.clock() + ": " + getName() + ": VM #" + vmId +
+                     " created successfully in Datacenter #" + datacenterId);
+         } else {
+             Log.printLine(CloudSim.clock() + ": " + getName() + ": Failed to create VM #" + vmId +
+                     " in Datacenter #" + datacenterId);
+     
+             // Retry in next datacenter
+             for (int nextDcId : getDatacenterIdsList()) {
+                 if (!getDatacenterRequestedIdsList().contains(nextDcId)) {
+                     getDatacenterRequestedIdsList().add(nextDcId);
+                     createVmsInDatacenter(nextDcId);
+                     Log.printLine(getName() + ": Retrying VM creation in Datacenter #" + nextDcId);
+                     return; // 👈 don't continue — wait for next ACK
+                 }
+             }
+         }
+     
+         // If all VM creation attempts (including retries) have been processed
+         if (getVmsAcks() == getVmList().size()) {
+             if (getVmsCreatedList().size() > 0) {
+                 submitCloudlets();
+             } else {
+                 Log.printLine(CloudSim.clock() + ": " + getName() +
+                         ": None of the required VMs could be created. Aborting.");
+                 finishExecution();
+             }
+         }
+     }
+}
  
