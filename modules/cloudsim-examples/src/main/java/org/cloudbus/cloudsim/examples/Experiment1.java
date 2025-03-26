@@ -478,72 +478,7 @@ public class Experiment1 {
             broker.submitVmList(VMs);
             broker.submitCloudletList(cloudlets);
 
-            /*final CloudsimTest.MonitorController runMonitorThread = new CloudsimTest.MonitorController();
-            Runnable monitor = () -> {
-                int interval = 1000;
-                int i = 0;
-                while (runMonitorThread.run){
-                    try{
-                        Thread.sleep(interval);
 
-                        java.io.File logfile = new java.io.File("C:\\Users\\khali\\Documents\\Master Thesis\\cloudsim-6.0-pre\\modules\\cloudsim-examples\\src\\main\\resources\\datasets\\logs\\logfile"+i+".txt");
-                        try {
-                            logfile.createNewFile();
-                        } catch (IOException e) {
-                            //throw new RuntimeException(e);
-                        }
-                        String msg = "";
-
-
-
-                        for(PowerDatacenter datacenter : datacenters){
-                            for(Host host : datacenter.getHostList()){
-                                int usedPe = 0;
-                                int usedRam = 0;
-                                for (Vm vm : host.getVmList()){
-                                    usedPe += vm.getNumberOfPes();
-                                    usedRam += vm.getCurrentAllocatedRam();
-                                }
-
-                                msg += datacenter.getName() + ";" +  host.getId() + ";" + host.getNumberOfPes() + ";" + (host.getNumberOfPes()+usedPe) + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getAvailableRam()+usedRam) + ";\n";
-                            }
-                        }
-
-                        try {
-                            FileWriter writer = new FileWriter("C:\\Users\\khali\\Documents\\Master Thesis\\cloudsim-6.0-pre\\modules\\cloudsim-examples\\src\\main\\resources\\datasets\\logs\\logfile"+i+".txt");
-                            writer.write(msg);
-                            writer.close();
-                        } catch (IOException e) {
-                            //throw new RuntimeException(e);
-                        }
-
-                        /*Log.printLine("");
-                        Log.printLine("-----------------");
-                        for(Datacenter datacenter : datacenters){
-                            Log.printLine("Datacenter: " + datacenter.getName());
-                            for (Host host : datacenter.getHostList()){
-
-                                Log.print("Host: ");
-                                Log.printLine(host.getId());
-
-                                Log.print("PEs (");
-                                Log.print(host.getNumberOfFreePes());
-                                Log.print("/");
-                                Log.print(host.getNumberOfPes());
-                                Log.printLine(")");
-                            }
-
-                        }*/
-                    /*
-
-                    }catch (Exception e){
-                        Log.printLine("Error in monitor");
-                        Log.printLine(e.getMessage());
-                    }
-
-                    i++;
-                }
-            };*/
 
 
 
@@ -707,7 +642,7 @@ public class Experiment1 {
                                     
                                 }
 
-                                if(entry.isActive()){
+                                /*f(entry.isActive()){*/
 
                                     cpuUtilization = allocated_mips / total_mips;
 
@@ -746,7 +681,7 @@ public class Experiment1 {
                                 //msg += entry.getTime() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" + host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency
                                 msg += entry.getTime() + ";" + datacenter.getId() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + dvfs + ";" + frequencyRange + ";" + voltageRange + ";" +  cpuUtilization + ";" + ((MyPowerHost) host ).getPowerModel().getPower(cpuUtilization) + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" +  ((MyPowerHostEntry) entry).getRamUtilization() + ";" + ((MyPowerHost) host ).getPowerModelRam().getPower(((MyPowerHostEntry) entry).getRamUtilization()) + ";"+ host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + ((MyPowerHost) host).getStorageSize() + ";" + (((MyPowerHost) host).getStorageSize() - ((MyPowerHostEntry) entry).getAllocatedStorage()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency 
 
-                                }
+                                /*}*/
 
                             }else{
                                 System.err.println("Err");
