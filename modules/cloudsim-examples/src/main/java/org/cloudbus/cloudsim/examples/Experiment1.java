@@ -5,7 +5,6 @@ package org.cloudbus.cloudsim.examples;
 import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.MyChange.*;
-import org.cloudbus.cloudsim.MyChange.PowerModelRamDynamic;
 import org.cloudbus.cloudsim.power.*;
 import org.cloudbus.cloudsim.power.models.*;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
@@ -109,7 +108,8 @@ public class Experiment1 {
                             new VmSchedulerTimeShared(peList),
                             new PowerModelSpecPowerHpProLiantMl110G3PentiumD930(),
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
-                            new PowerModelLinear(50, 0.3)
+                            new PowerModelRamDataSheetBased(),
+                            new MemoryBandwidthProvisioner(1e9, 1e9) // 1 Gbps each
                     )
             );
         }
@@ -137,7 +137,8 @@ public class Experiment1 {
                             new VmSchedulerTimeShared(peList),
                             new PowerModelSpecPowerHpProLiantMl110G4Xeon3040(),
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
-                            new PowerModelLinear(50, 0.3)
+                            new PowerModelRamDataSheetBased(),
+                            new MemoryBandwidthProvisioner(1e9, 1e9) // 1 Gbps each
                     )
             );
         }
@@ -165,7 +166,8 @@ public class Experiment1 {
                             new VmSchedulerTimeShared(peList),
                             new PowerModelSpecPowerHpProLiantMl110G5Xeon3075(),
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
-                            new PowerModelLinear(50, 0.3)
+                            new PowerModelRamDataSheetBased(),
+                            new MemoryBandwidthProvisioner(1e9, 1e9)
                     )
             );
         }
@@ -207,7 +209,8 @@ public class Experiment1 {
                             new VmSchedulerTimeShared(peList),
                             new PowerModelLinearCelsiusV80AMDOpteron2218(maxPower, staticPowerPercentage, frequecies, voltages),
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
-                            new PowerModelLinear(50, 0.3)
+                            new PowerModelRamDataSheetBased(),
+                            new MemoryBandwidthProvisioner(1e9, 1e9) // 1 Gbps each
                     )
             );
         }
@@ -501,7 +504,7 @@ public class Experiment1 {
                 System.err.println("Can't create file");
             }
             //String msg = "time;datacenter_name;host_id;type;active;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;ram;available_ram;bw;available_bw;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
-            String msg = "time;datacenter_id;datacenter_name;host_id;type;active;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;dvfs_available;frequency_range;voltage_range;cpu_utilization;cpu_power;ram;available_ram;ram_utilization;ram_power;bw;available_bw;storage;available_storage;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
+            String msg = "time;datacenter_id;datacenter_name;host_id;type;active;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;dvfs_available;frequency_range;voltage_range;cpu_utilization;cpu_power;ram;allocated_ram;ram_power;bw;available_bw;storage;available_storage;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
 
 
             HashMap<Integer, Integer> vm_ram_map = new HashMap<>();
@@ -613,13 +616,29 @@ public class Experiment1 {
 
 
                                 String vmInfo = "";
+                                double vmRam = 0.0;
                                 for (Vm vm : ((MyPowerHostEntry) entry).getVms()){
                                     //vmInfo += vm.getNumberOfPes() + "," + vm.getMips() + "," + vm.getRam() + "," + vm.getBw() + ":";
                                     if (vm instanceof MyPowerVm){
                                         vmInfo += vm.getNumberOfPes() + "," + ((MyPowerVmEntry) vm.getStateHistory().get(index)).getAllocatedMips() + "," + ((MyPowerVmEntry) vm.getStateHistory().get(index)).getRequestedRam() + "," + ((MyPowerVmEntry) vm.getStateHistory().get(index)).getRequestedBw() + ":";
                                         
                                         vm_ram_map.put((Integer) vm.getId(), (Integer)vm.getRam());
+
+                                        /*List<VmStateHistoryEntry> vmStateHistoryEntry = ((MyPowerVm) vm).getStateHistory();
+
+                                        for(VmStateHistoryEntry vmentry : vmStateHistoryEntry){
+                                            vmRam += ((MyPowerVmEntry) vmentry).getRamPower();
+
+                                            ((MyPowerVmEntry) vmentry).
+                                        }*/
+                                        List<VmStateHistoryEntry> vmStateHistoryEntry = ((MyPowerVm) vm).getStateHistory();
+
+                                        for(VmStateHistoryEntry vmentry : vmStateHistoryEntry){
+                                            vmRam += ((MyPowerVmEntry) vmentry).getRamPower();
+
                                         
+
+                                        }
                                     }
                                 }
 
@@ -663,11 +682,11 @@ public class Experiment1 {
                                         ", DVFS: " + dvfs +
                                         ", Frequency Range: " + frequencyRange +
                                         ", Voltage Range: " + voltageRange +
-                                        ", RAM Model: " + ((MyPowerHost) host).getPowerModelRam() + 
+                                        //", RAM Model: " + ((MyPowerHost) host).getPowerModelRam() + 
                                         ", Total RAM: " + host.getRamProvisioner().getRam() +
-                                        ", Available RAM: " + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) +
-                                        ", RAM Utilization: " + ((MyPowerHostEntry) entry).getRamUtilization() +
-                                        ", RAM Power: " + ((MyPowerHost) host ).getPowerModelRam().getPower(((MyPowerHostEntry) entry).getRamUtilization())+
+                                        ", Allocated RAM: " + (((MyPowerHostEntry) entry).getAllocatedRam()) +
+                                        //", RAM Utilization: " + ((MyPowerHostEntry) entry).getRamUtilization() +
+                                        ", RAM Power: " + vmRam +
                                         //", RAM Energy: " + ramEnergy +
                                         ", Total Bandwidth: " + host.getBwProvisioner().getBw() +
                                         ", Available Bandwidth: " + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) +
@@ -679,7 +698,7 @@ public class Experiment1 {
                                     );
 
                                 //msg += entry.getTime() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" + host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency
-                                msg += entry.getTime() + ";" + datacenter.getId() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + dvfs + ";" + frequencyRange + ";" + voltageRange + ";" +  cpuUtilization + ";" + ((MyPowerHost) host ).getPowerModel().getPower(cpuUtilization) + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" +  ((MyPowerHostEntry) entry).getRamUtilization() + ";" + ((MyPowerHost) host ).getPowerModelRam().getPower(((MyPowerHostEntry) entry).getRamUtilization()) + ";"+ host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + ((MyPowerHost) host).getStorageSize() + ";" + (((MyPowerHost) host).getStorageSize() - ((MyPowerHostEntry) entry).getAllocatedStorage()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency 
+                                msg += entry.getTime() + ";" + datacenter.getId() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + dvfs + ";" + frequencyRange + ";" + voltageRange + ";" +  cpuUtilization + ";" + ((MyPowerHost) host ).getPowerModel().getPower(cpuUtilization) + ";" + host.getRamProvisioner().getRam() + ";"  + (((MyPowerHostEntry) entry).getAllocatedRam()) + ";" + vmRam + ";"+ host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + ((MyPowerHost) host).getStorageSize() + ";" + (((MyPowerHost) host).getStorageSize() - ((MyPowerHostEntry) entry).getAllocatedStorage()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency 
 
                                 /*}*/
 

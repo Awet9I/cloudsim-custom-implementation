@@ -90,5 +90,20 @@ import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
              }
          }
      }
+
+
+    @Override
+    protected void processCloudletReturn(SimEvent ev) {
+        Cloudlet cloudlet = (Cloudlet) ev.getData();
+    
+        // Estimate memory activity and log energy
+        Vm vm = VmList.getById(getVmsCreatedList(), cloudlet.getVmId());
+        if (vm instanceof MyPowerVm) {
+            double duration = cloudlet.getFinishTime() - cloudlet.getExecStartTime();
+            ((MyPowerVm) vm).logCloudletMemoryUsage(cloudlet, duration, new PowerModelRamDataSheetBased());
+        }
+    
+        super.processCloudletReturn(ev); // continue default handling
+    }
 }
  

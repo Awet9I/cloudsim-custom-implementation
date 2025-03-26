@@ -1,14 +1,19 @@
 package org.cloudbus.cloudsim.MyChange;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.CloudletScheduler;
 import org.cloudbus.cloudsim.ResCloudlet;
 import org.cloudbus.cloudsim.VmStateHistoryEntry;
+import org.cloudbus.cloudsim.MyChange.MemoryAccessEstimator.MemoryActivity;
 import org.cloudbus.cloudsim.power.PowerVm;
 
 public class MyPowerVm extends PowerVm {
-    
+    private Map<Integer, MemoryAccessEstimator.MemoryActivity> cloudletMemoryMap = new HashMap<>();
+    private double cumulativeRamEnergyJoules = 0.0;
 
 
     /**
@@ -74,4 +79,52 @@ public class MyPowerVm extends PowerVm {
         }
         getStateHistory().add(newState);
     }
+
+
+
+    public void logCloudletMemoryUsage(Cloudlet cloudlet, double duration, PowerModelRamDataSheetBased ramModel) {
+    MemoryActivity activity = MemoryAccessEstimator.estimateBitRates(cloudlet, duration);
+
+    double power = ramModel.getPower(activity.readBitsPerSecond, activity.writeBitsPerSecond, 1.0);
+    double energy = power * duration;
+    cumulativeRamEnergyJoules += energy;
+
+    if (!getStateHistory().isEmpty()) {
+        VmStateHistoryEntry latest = getStateHistory().get(getStateHistory().size() - 1);
+        if (latest instanceof MyPowerVmEntry) {
+            MyPowerVmEntry enriched = new MyPowerVmEntry(
+                latest.getTime(),
+                latest.getAllocatedMips(),
+                latest.getRequestedMips(),
+                latest.isInMigration(),
+                ((MyPowerVmEntry) latest).getAllocatedRam(),
+                ((MyPowerVmEntry) latest).getRequestedRam(),
+                ((MyPowerVmEntry) latest).getAllocatedBw(),
+                ((MyPowerVmEntry) latest).getRequestedBw(),
+                ((MyPowerVmEntry) latest).getAllocatedStorage(),
+                activity.readBitsPerSecond,
+                activity.writeBitsPerSecond,
+                power
+            );
+            if (!getStateHistory().isEmpty()) {
+                VmStateHistoryEntry previousState = getStateHistory().get(getStateHistory().size() - 1);
+                if (previousState.getTime() == latest.getTime()) {
+                    getStateHistory().set(getStateHistory().size() - 1, enriched);
+                    return;
+                }
+            //getStateHistory().set(getStateHistory().size() - 1, enriched);
+            
+        }
+
+        getStateHistory().add(enriched);
+    } 
+}
+}
+    
+
+public double[] getCurrentRequestedMemoryBandwidth() {
+    return new double[]{0.0, 0.0}; // stubbed; replace with dynamic tracking if needed
+}
+
+
 }

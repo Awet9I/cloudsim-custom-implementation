@@ -12,6 +12,8 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
     private double allocatedBw;
     private double requestedBw;
     private double allocatedStorage;
+
+    private double readBitsPerSec, writeBitsPerSec, ramPower;
     
 
     /**
@@ -23,7 +25,7 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
      * @param isInMigration the is in migration
      */
     public MyPowerVmEntry(double time, double allocatedMips, double requestedMips, boolean isInMigration,
-                          double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage) {
+                          double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, double read, double write, double ramPower) {
         super(time, allocatedMips, requestedMips, isInMigration);
 
         this.allocatedRam = allocatedRam;
@@ -31,9 +33,66 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
         this.allocatedBw = allocatedBw;
         this.requestedBw = requestedBw;
         this.allocatedStorage = allocatedStorage;
+        this.readBitsPerSec = read;
+        this.writeBitsPerSec = write;
+        this.ramPower = ramPower;
        
     }
 
+/**
+ * second constructor
+ * @param time
+ * @param allocatedMips
+ * @param requestedMips
+ * @param isInMigration
+ * @param allocatedRam
+ * @param requestedRam
+ * @param allocatedBw
+ * @param requestedBw
+ * @param allocatedStorage
+ */
+    public MyPowerVmEntry(
+        double time,
+        double allocatedMips,
+        double requestedMips,
+        boolean isInMigration,
+        double allocatedRam,
+        double requestedRam,
+        double allocatedBw,
+        double requestedBw,
+        double allocatedStorage
+) {
+    this(time, allocatedMips, requestedMips, isInMigration,
+         allocatedRam, requestedRam, allocatedBw, requestedBw, allocatedStorage,
+         0.0, 0.0, 0.0);  // Default zero memory stats
+}
+
+
+
+    public double getReadBitsPerSec(){
+    return readBitsPerSec;
+    }
+
+    public double setReadBitsPerSec(double readBitsPerSec){
+        return this.readBitsPerSec = readBitsPerSec;
+    }
+
+
+    public double getWriteBitsPerSec(){
+        return writeBitsPerSec;
+    }
+    
+    public double setwriteBitsPerSec(double writeBitsPerSec){
+            return this.writeBitsPerSec = writeBitsPerSec;
+    }
+
+    public double getRamPower(){
+        return ramPower;
+    }
+    
+    public double setRamPower(double ramPower){
+            return this.ramPower = ramPower;
+    }
 
     public double getAllocatedRam() {
         return allocatedRam;

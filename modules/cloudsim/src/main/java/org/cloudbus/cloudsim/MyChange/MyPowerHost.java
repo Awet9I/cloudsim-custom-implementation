@@ -11,11 +11,13 @@ import org.cloudbus.cloudsim.provisioners.BwProvisioner;
 import org.cloudbus.cloudsim.provisioners.RamProvisioner;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MyPowerHost extends PowerHostUtilizationHistory {
     private long storageSize;
     private PowerModel raPowerModel;
+    private MemoryBandwidthProvisioner memoryBandwidthProvisioner;
 
     /**
      * Instantiates a new PowerHost.
@@ -28,10 +30,36 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
      * @param vmScheduler    the VM scheduler
      * @param powerModel
      */
-    public MyPowerHost(int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler, PowerModel powerModel, PowerModel raPowerModel) {
+    public MyPowerHost(int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler, PowerModel powerModel, PowerModel raPowerModel, MemoryBandwidthProvisioner memoryBandwidthProvisioner) {
         super(id, ramProvisioner, bwProvisioner, storage, peList, vmScheduler, powerModel);
         this.storageSize = storage;
         this.raPowerModel = raPowerModel; 
+        this.memoryBandwidthProvisioner = memoryBandwidthProvisioner;
+    }
+
+
+        @Override
+    public boolean vmCreate(Vm vm) {
+        boolean result = super.vmCreate(vm);
+        if (result && vm instanceof MyPowerVm) {
+            double[] bws = ((MyPowerVm) vm).getCurrentRequestedMemoryBandwidth();
+            if (!memoryBandwidthProvisioner.allocateBandwidthForVm(vm, bws[0], bws[1])) {
+                super.vmDestroy(vm);
+                return false;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void vmDestroy(Vm vm) {
+        memoryBandwidthProvisioner.deallocateBandwidthForVm(vm);
+        super.vmDestroy(vm);
+    }
+
+    @Override
+    public void vmDestroyAll() {
+        super.vmDestroyAll();
     }
 
 
@@ -112,6 +140,7 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                             (vm.isInMigration() && !getVmsMigratingIn().contains(vm))
                             
                             );
+                   
                 }else{
                     vm.addStateHistoryEntry(
                             currentTime,
