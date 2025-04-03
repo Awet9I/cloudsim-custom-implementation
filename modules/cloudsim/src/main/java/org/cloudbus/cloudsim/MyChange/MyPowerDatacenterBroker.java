@@ -92,6 +92,12 @@ import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
      }
 
 
+    /*
+     * This method overrides this method from datacenterBroker 
+     * and custumize it to handle logging of ram usage of cloudlet after it finish being executed. 
+     * And it also will trigger new event which 
+     * will send new cloudlet, if there are any waiting cloudlets, to be processed.
+     */
     @Override
     protected void processCloudletReturn(SimEvent ev) {
         Cloudlet cloudlet = (Cloudlet) ev.getData();
@@ -103,7 +109,84 @@ import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
             ((MyPowerVm) vm).logCloudletMemoryUsage(cloudlet, duration, new PowerModelRamDataSheetBased());
         }
     
-        super.processCloudletReturn(ev); // continue default handling
+        //super.processCloudletReturn(ev); // continue default handling
+
+        //Cloudlet cloudlet = (Cloudlet) ev.getData();
+		getCloudletReceivedList().add(cloudlet);
+		Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Cloudlet ", cloudlet.getCloudletId(),
+				" received");
+        // Custom: notify that VM is now available
+        Object[] vmAvailableData = new Object[] { cloudlet.getCloudletId(), cloudlet.getVmId() };
+        sendNow(getId(), CloudSimTags.CUSTOM_EVENT_VM_AVAILABLE, vmAvailableData);
+
+		cloudletsSubmitted--;
+		if (getCloudletList().size() == 0 && cloudletsSubmitted == 0) { // all cloudlets executed
+			Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": All Cloudlets executed. Finishing...");
+			clearDatacenters();
+			finishExecution();
+		} else { // some cloudlets haven't finished yet
+			if (getCloudletList().size() > 0 && cloudletsSubmitted == 0) {
+				// all the cloudlets sent finished. It means that some bount
+				// cloudlet is waiting its VM be created
+				clearDatacenters();
+				createVmsInDatacenter(0);
+			}
+
+		}
     }
+
+
+    /**
+	 * Process non-default received events that aren't processed by
+         * the {@link #processEvent(org.cloudbus.cloudsim.core.SimEvent)} method.
+         * This method should be overridden by subclasses in other to process
+         * new defined events.
+	 * 
+	 * @param ev a SimEvent object
+	 * @pre ev != null
+	 * @post $none
+         * //TODO to ensure the method will be overridden, it should be defined
+         * as abstract in a super class from where new brokers have to be extended.
+	 */
+    @Override
+	protected void processOtherEvent(SimEvent ev) {
+		if (ev == null) {
+			Log.printConcatLine(getName(), ".processOtherEvent(): ", "Error - an event is null.");
+			return;
+		}
+
+        switch (ev.getTag()) {
+            case CloudSimTags.CUSTOM_EVENT_VM_AVAILABLE -> {
+                Object[] data = (Object[]) ev.getData();
+                int cloudletId = (Integer) data[0];
+                int vmId = (Integer) data[1];
+                
+                Log.printConcatLine(CloudSim.clock(), ": ", getName(),
+                    ": Custom event -> VM #", vmId, " is now available after Cloudlet #", cloudletId);
+                
+                // Optionally: trigger rescheduling here
+                if (!getCloudletList().isEmpty()) {
+                    Cloudlet next = getCloudletList().remove(0);
+                    next.setVmId(vmId);
+                    sendNow(getVmsToDatacentersMap().get(vmId), CloudSimTags.CLOUDLET_SUBMIT, next);
+                    cloudletsSubmitted++;
+                    getCloudletSubmittedList().add(next);
+        
+                    Log.printConcatLine(CloudSim.clock(), ": ", getName(), 
+                        ": Re-submitted Cloudlet #", next.getCloudletId(), " to VM #", vmId);
+                }
+            }
+    
+            default ->{
+                Log.printConcatLine(getName(),
+                    ".processOtherEvent(): Unhandled custom event tag: ", ev.getTag());
+            }
+        }
+
+		//Log.printConcatLine(getName(), ".processOtherEvent(): Error - event unknown by this DatacenterBroker.");
+	}
+
+
+
 }
  

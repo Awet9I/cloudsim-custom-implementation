@@ -74,7 +74,7 @@ public class Experiment1 {
 
         return list;
     }
-    private static PowerDatacenter createDatacenter(String name, int Ml110G3Hosts, int Ml110G4Hosts, int Ml110G5Hosts, int custom1Hosts, List<MyPowerHost> list, int idShift){
+    private static PowerDatacenter createDatacenter(String name, int Ml110G3Hosts, int Ml110G4Hosts, int Ml110G5Hosts, int custom1Hosts, List<MyPowerHost> list, int idShift, MyPowerDatacenterBroker broker){
         // https://www.spec.org/power_ssj2008/results/res2011q4/power_ssj2008-20111018-00401.html
 
         List<MyPowerHost> hostList;
@@ -275,9 +275,12 @@ public class Experiment1 {
 
         // 6. Finally, we need to create a PowerDatacenter object.
         PowerDatacenter datacenter = null;
+        MyGenericVmAllocation genericVmAllocation = new MyGenericVmAllocation(hostList, "bestfit");
         try {
-            //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
-            datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicyResilient(hostList), storageList, 300);
+            //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 300);
+            //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicyResilient(hostList), storageList, 300);
+            datacenter = new PowerDatacenter(name, characteristics, genericVmAllocation, storageList, 300, broker);
+            genericVmAllocation.setDatacenter(datacenter);
             // datacenter = new PowerDatacenter(name, characteristics, new PowerVmAllocationPolicyMigrationStaticThreshold(hostList, new PowerVmSelectionPolicyRandomSelection(), 0.92), storageList, 300);
         } catch (Exception e) {
             e.printStackTrace();
@@ -305,7 +308,9 @@ public class Experiment1 {
             String line;
             bufferedReader.readLine();
             int vm_id = 0;
-            while ((line = bufferedReader.readLine()) != null) {
+            //while ((line = bufferedReader.readLine()) != null) {
+            for(int i = 0; i < 2; i++){
+                line = bufferedReader.readLine();
                 String[] features = line.split(";\t");
 
                 UtilizationModel utilizationModel = new UtilizationModelFull();
@@ -379,7 +384,9 @@ public class Experiment1 {
             String line;
             bufferedReader.readLine();
             int cloudlet_id = 0;
-            while ((line = bufferedReader.readLine()) != null) {
+            //while ((line = bufferedReader.readLine()) != null) {
+            for(int i = 0; i < 3; i++){
+                line = bufferedReader.readLine();
                 String[] features = line.split(";\t");
 
                 UtilizationModel utilizationModel = new UtilizationModelFull();
@@ -449,31 +456,36 @@ public class Experiment1 {
 
             CloudSim.init(users, calender, trace_flags);
 
+
+            MyPowerDatacenterBroker broker = createBroker("Central");
+
+
             int[] hosts_datacenter = {200*2, 185*1, 190*1, 275*1};
             int[] hosts_datacenter_id_shifts = {0, hosts_datacenter[0], hosts_datacenter[0] + hosts_datacenter[1], hosts_datacenter[0] + hosts_datacenter[1] + hosts_datacenter[2]};
             datacenters = new ArrayList<PowerDatacenter>();
-            PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 100*2, 40*2, 40*2, 20*2, null, hosts_datacenter_id_shifts[0]);
-            PowerDatacenter datacenter2 = createDatacenter("Datacenter_2", 20*1, 100*1, 40*1, 25*1, datacenter1.getHostList(), hosts_datacenter_id_shifts[1]);
-            PowerDatacenter datacenter3 = createDatacenter("Datacenter_3", 0*1, 40*1, 120*1, 30*1, datacenter2.getHostList(), hosts_datacenter_id_shifts[2]);
-            PowerDatacenter datacenter4 = createDatacenter("Datacenter_4", 80*1, 90*1, 70*1, 35*1, datacenter3.getHostList(), hosts_datacenter_id_shifts[3]);
+            PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 0, 0, 1, 1, null, hosts_datacenter_id_shifts[0], broker);
+            //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 100*2, 40*2, 40*2, 20*2, null, hosts_datacenter_id_shifts[0]);
+            //PowerDatacenter datacenter2 = createDatacenter("Datacenter_2", 20*1, 100*1, 40*1, 25*1, datacenter1.getHostList(), hosts_datacenter_id_shifts[1]);
+            //PowerDatacenter datacenter3 = createDatacenter("Datacenter_3", 0*1, 40*1, 120*1, 30*1, datacenter2.getHostList(), hosts_datacenter_id_shifts[2]);
+            //PowerDatacenter datacenter4 = createDatacenter("Datacenter_4", 80*1, 90*1, 70*1, 35*1, datacenter3.getHostList(), hosts_datacenter_id_shifts[3]);
 
             System.out.println(datacenter1.getHostList().size());
-            System.out.println(datacenter2.getHostList().size());
-            System.out.println(datacenter3.getHostList().size());
-            System.out.println(datacenter4.getHostList().size());
+            //System.out.println(datacenter2.getHostList().size());
+            //System.out.println(datacenter3.getHostList().size());
+            //System.out.println(datacenter4.getHostList().size());
 
             datacenter1.setDisableMigrations(false);
-            datacenter2.setDisableMigrations(false);
-            datacenter3.setDisableMigrations(false);
-            datacenter4.setDisableMigrations(false);
+            //datacenter2.setDisableMigrations(false);
+            //datacenter3.setDisableMigrations(false);
+            //datacenter4.setDisableMigrations(false);
             datacenters.add(datacenter1);
-            datacenters.add(datacenter2);
-            datacenters.add(datacenter3);
-            datacenters.add(datacenter4);
+            //datacenters.add(datacenter2);
+            //datacenters.add(datacenter3);
+            //datacenters.add(datacenter4);
 
             int SIMULATION_LIMIT = 24*60*60;
 
-            MyPowerDatacenterBroker broker = createBroker("Central");
+           
 
             VMs = DatasetVMPerformance(broker.getId());//createVM(broker.getId(), 5, 0); //creating 5 vms
             cloudlets = DatasetJobs(broker.getId(), SIMULATION_LIMIT);// createCloudlet(broker.getId(), 10, 0); // creating 10 cloudlets
@@ -548,8 +560,13 @@ public class Experiment1 {
                 //System.out.println(hosts_datacenter_id_shifts[datacenter_number]);
                 //System.out.println(hosts_datacenter_id_shifts[datacenter_number] + hosts_datacenter[datacenter_number] - 1);
                 //System.out.println(datacenter.getHostList().subList(hosts_datacenter_id_shifts[datacenter_number], hosts_datacenter_id_shifts[datacenter_number] + hosts_datacenter[datacenter_number]).size());
-                for(int i = hosts_datacenter_id_shifts[datacenter_number]; i < hosts_datacenter_id_shifts[datacenter_number] + hosts_datacenter[datacenter_number]; i++){
+
+
+
+                //for(int i = hosts_datacenter_id_shifts[datacenter_number]; i < hosts_datacenter_id_shifts[datacenter_number] + hosts_datacenter[datacenter_number]; i++){
+
                 //for(Host host : datacenter.getHostList().subList(hosts_datacenter_id_shifts[datacenter_number], hosts_datacenter_id_shifts[datacenter_number] + hosts_datacenter[datacenter_number])){ // .subList(start_index, end_index)
+                for(int i = 0; i < datacenter.getHostList().size(); i++){
                     Host host = datacenter.getHostList().get(i);
                     if(host instanceof MyPowerHost){
                         //System.out.println(host.getId());
