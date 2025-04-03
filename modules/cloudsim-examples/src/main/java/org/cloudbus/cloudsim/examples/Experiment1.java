@@ -385,7 +385,7 @@ public class Experiment1 {
             bufferedReader.readLine();
             int cloudlet_id = 0;
             //while ((line = bufferedReader.readLine()) != null) {
-            for(int i = 0; i < 3; i++){
+            for(int i = 0; i < 4; i++){
                 line = bufferedReader.readLine();
                 String[] features = line.split(";\t");
 
