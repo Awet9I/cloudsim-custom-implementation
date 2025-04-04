@@ -10,6 +10,14 @@ import org.cloudbus.cloudsim.power.models.*;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
+import org.cloudbus.cloudsim.vmplus.disk.DataItem;
+import org.cloudbus.cloudsim.vmplus.disk.HddCloudlet;
+import org.cloudbus.cloudsim.vmplus.disk.HddCloudletSchedulerTimeShared;
+import org.cloudbus.cloudsim.vmplus.disk.HddHost;
+import org.cloudbus.cloudsim.vmplus.disk.HddPe;
+import org.cloudbus.cloudsim.vmplus.disk.HddVm;
+import org.cloudbus.cloudsim.vmplus.disk.VmDiskScheduler;
+import org.cloudbus.cloudsim.vmplus.util.Id;
 
 import java.io.BufferedReader;
 import java.io.FileDescriptor;
@@ -24,9 +32,11 @@ import java.util.*;
 
 public class Experiment1 {
     private static List<Cloudlet> cloudlets;
-    private static List<MyPowerVm> VMs;
+    private static List<Vm> VMs;
     private static List<MyPowerHost> hosts;
     private static List<PowerDatacenter> datacenters;
+    private static List<HddPe> diskList;
+    private static List<DataItem> dataItems;
 
     private static List<Vm> createVM(int userId, int vms, int idShift) {
         //Creates a container to store VMs. This list is passed to the broker later
@@ -74,10 +84,30 @@ public class Experiment1 {
 
         return list;
     }
-    private static PowerDatacenter createDatacenter(String name, int Ml110G3Hosts, int Ml110G4Hosts, int Ml110G5Hosts, int custom1Hosts, List<MyPowerHost> list, int idShift, MyPowerDatacenterBroker broker){
+
+
+    private static List<DataItem> createDataItems(int num, int data_item_size){
+        dataItems = new LinkedList<>();
+        for(int i = 0; i < num; i++){
+           dataItems.add(new DataItem(data_item_size));
+        }
+        return dataItems;
+    }
+
+    private static List<HddPe> createDiskList(int num, List<DataItem> dataItems, int IOcap){
+        diskList = new LinkedList<>();
+        for(int i = 0; i < num; i++){
+            diskList.add(new HddPe(new PeProvisionerSimple(IOcap), dataItems.get(i), dataItems.get(i + 1)));
+        }
+        return diskList;
+    }
+
+
+
+    private static PowerDatacenter createDatacenter(String name, int Ml110G3Hosts, int Ml110G4Hosts, int Ml110G5Hosts, int custom1Hosts, List<Host> list, int idShift, MyPowerDatacenterBroker broker){
         // https://www.spec.org/power_ssj2008/results/res2011q4/power_ssj2008-20111018-00401.html
 
-        List<MyPowerHost> hostList;
+        List<Host> hostList;
         if(list != null){
             hostList = list;
         }else{
@@ -214,6 +244,24 @@ public class Experiment1 {
                     )
             );
         }
+
+        // Step 3: Prepare data items, which will be stored on the disk
+        // These two items reside on the first disk
+        dataItems = createDataItems(4, 5);
+       
+
+        // Step 4: Prepare the lists of CPUs and disks of the host
+        List<Pe> peList = Arrays.asList(new Pe(Id.pollId(Pe.class), new PeProvisionerSimple(CustomeTags.HOST_MIPS)));
+
+        diskList = createDiskList(2, dataItems, CustomeTags.HOST_MIOPS);
+       
+        List<HddPe> hddList = Arrays.asList(diskList.get(0), diskList.get(1));
+        for(int i = 0; i < 2; i++){
+            hostList.add(new HddHost(new RamProvisionerSimple(2048),
+                new BwProvisionerSimple(CustomeTags.HOST_BW), CustomeTags.HOST_STORAGE, peList, hddList, new VmSchedulerTimeShared(peList),
+                new VmDiskScheduler(hddList)));
+
+        }
         /*
         // https://link.springer.com/article/10.1007/s10723-015-9334-y
         // https://onlinelibrary.wiley.com/doi/epdf/10.1002/cpe.1867
@@ -302,8 +350,10 @@ public class Experiment1 {
         return broker;
     }
 
-    public static List<MyPowerVm> DatasetVMPerformance(int broker_id) {
+    public static List<Vm> DatasetVMPerformance(int broker_id) {
+        List<Vm> allVm = new LinkedList<>();
         List<MyPowerVm> vmFromDataset = new LinkedList<>();
+        List<HddVm> hddVms = new LinkedList<>();
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader("/home/ubuntu/cloudsim_imp/3.csv"))) {
             String line;
             bufferedReader.readLine();
@@ -373,11 +423,29 @@ public class Experiment1 {
             throw new RuntimeException(e);
         }
 
-        return vmFromDataset;
+
+        try {
+            
+            for(int i = 0; i < 3; i++){
+                hddVms.add(new HddVm("Test" + i, broker_id, CustomeTags.VM_MIPS, CustomeTags.HOST_MIOPS, 1, CustomeTags.VM_RAM, CustomeTags.VM_BW, CustomeTags.VM_SIZE, CustomeTags.VMM,
+                new HddCloudletSchedulerTimeShared(), new Integer[] { diskList.get(i).getId()}));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        
+        allVm.addAll(vmFromDataset);
+        allVm.addAll(hddVms);
+
+        return allVm;
     }
+
+
+
 
     public static List<Cloudlet> DatasetJobs(int broker_id, int simulation_limit) {
         List<Cloudlet> cloudletsFromDataset = new LinkedList<>();
+        List<HddCloudlet> hddCloudlets = new LinkedList<>();
         HashMap<String, Integer> userIds = new HashMap<>();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader("/home/ubuntu/cloudsim_imp/3.csv"))) {
@@ -425,6 +493,15 @@ public class Experiment1 {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        try {
+            for(int i = 0; i < 3; i++){
+                hddCloudlets.add(new HddCloudlet(CustomeTags.VM_MIPS, CustomeTags.HOST_MIOPS * 2, 5, broker_id, false, dataItems.get(i)));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        cloudletsFromDataset.addAll(hddCloudlets);
         return cloudletsFromDataset;
     }
 
