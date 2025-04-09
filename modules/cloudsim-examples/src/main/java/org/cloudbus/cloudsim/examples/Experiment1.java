@@ -275,7 +275,7 @@ public class Experiment1 {
 
         // 6. Finally, we need to create a PowerDatacenter object.
         PowerDatacenter datacenter = null;
-        MyGenericVmAllocation genericVmAllocation = new MyGenericVmAllocation(hostList, "bestfit");
+        MyGenericVmAllocation genericVmAllocation = new MyGenericVmAllocation(hostList, "roundrobin");
         try {
             //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 300);
             //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicyResilient(hostList), storageList, 300);
@@ -308,9 +308,9 @@ public class Experiment1 {
             String line;
             bufferedReader.readLine();
             int vm_id = 0;
-            //while ((line = bufferedReader.readLine()) != null) {
-            for(int i = 0; i < 2; i++){
-                line = bufferedReader.readLine();
+            while ((line = bufferedReader.readLine()) != null) {
+            //for(int i = 0; i < 2; i++){
+                //line = bufferedReader.readLine();
                 String[] features = line.split(";\t");
 
                 UtilizationModel utilizationModel = new UtilizationModelFull();
@@ -365,7 +365,7 @@ public class Experiment1 {
 
                 //Vm  vm = new Vm(vm_id, broker_id, mips*CPUCores, CPUCores, (int) (memoryCapacityProvisioned/1000), bw, size, vmm, new CloudletSchedulerTimeShared());
                 //MyPowerVm vm = new MyPowerVm(vm_id, broker_id, CPUUsage, CPUCores,  (int) (memoryUsage / 1000), (long) ((networkReceivedThroughput + networkTransmittedThroughput) / 1000), size, 1, vmm, new CloudletSchedulerDynamicWorkload(CPUUsage, CPUCores), 300);
-                MyPowerVm vm = new MyPowerVm(vm_id, broker_id, CPUUsage, CPUCores,  (int) ((memoryUsage / 1000)*2), (long) (networkReceivedThroughput + networkTransmittedThroughput), size, 1, vmm, new CloudletSchedulerSpaceShared(), 300);
+                MyPowerVm vm = new MyPowerVm(vm_id, broker_id, CPUUsage, CPUCores,  (int) ((memoryUsage / 1000)), (long) (networkReceivedThroughput + networkTransmittedThroughput), size, 1, vmm, new CloudletSchedulerSpaceShared(), 300);
                 vmFromDataset.add(vm);
                 vm_id++;
             }
@@ -384,9 +384,9 @@ public class Experiment1 {
             String line;
             bufferedReader.readLine();
             int cloudlet_id = 0;
-            //while ((line = bufferedReader.readLine()) != null) {
-            for(int i = 0; i < 4; i++){
-                line = bufferedReader.readLine();
+            while ((line = bufferedReader.readLine()) != null) {
+            //for(int i = 0; i < 4; i++){
+                //line = bufferedReader.readLine();
                 String[] features = line.split(";\t");
 
                 UtilizationModel utilizationModel = new UtilizationModelFull();
@@ -463,7 +463,7 @@ public class Experiment1 {
             int[] hosts_datacenter = {200*2, 185*1, 190*1, 275*1};
             int[] hosts_datacenter_id_shifts = {0, hosts_datacenter[0], hosts_datacenter[0] + hosts_datacenter[1], hosts_datacenter[0] + hosts_datacenter[1] + hosts_datacenter[2]};
             datacenters = new ArrayList<PowerDatacenter>();
-            PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 176*2, 164*2, 164*2, 110*2, null, hosts_datacenter_id_shifts[0], broker);
+            PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 100*2, 64*2, 64*2, 80*2, null, hosts_datacenter_id_shifts[0], broker);
             //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 0, 0, 1, 1, null, hosts_datacenter_id_shifts[0], broker);
             //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 100*2, 40*2, 40*2, 20*2, null, hosts_datacenter_id_shifts[0]);
             //PowerDatacenter datacenter2 = createDatacenter("Datacenter_2", 20*1, 100*1, 40*1, 25*1, datacenter1.getHostList(), hosts_datacenter_id_shifts[1]);
