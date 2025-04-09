@@ -74,7 +74,7 @@ import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
                      getDatacenterRequestedIdsList().add(nextDcId);
                      createVmsInDatacenter(nextDcId);
                      Log.printLine(getName() + ": Retrying VM creation in Datacenter #" + nextDcId);
-                     return; // 👈 don't continue — wait for next ACK
+                     return; // don't continue — wait for next ACK
                  }
              }
          }
