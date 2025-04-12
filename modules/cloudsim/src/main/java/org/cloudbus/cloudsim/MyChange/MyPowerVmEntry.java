@@ -14,6 +14,10 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
     private double allocatedStorage;
 
     private double readBitsPerSec, writeBitsPerSec, ramPower;
+    private double requestedBwFromCloudlet;
+    private double diskReadRate;
+    private double diskWriteRate;
+
     
 
     /**
@@ -25,7 +29,8 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
      * @param isInMigration the is in migration
      */
     public MyPowerVmEntry(double time, double allocatedMips, double requestedMips, boolean isInMigration,
-                          double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, double read, double write, double ramPower) {
+                          double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, double read, double write, double ramPower, double requestedBwFromCloudlet, double diskReadRate,
+                          double diskWriteRate) {
         super(time, allocatedMips, requestedMips, isInMigration);
 
         this.allocatedRam = allocatedRam;
@@ -36,6 +41,9 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
         this.readBitsPerSec = read;
         this.writeBitsPerSec = write;
         this.ramPower = ramPower;
+        this.requestedBwFromCloudlet  = requestedBwFromCloudlet;
+        this.diskReadRate = diskReadRate;
+        this.diskWriteRate = diskWriteRate;
        
     }
 
@@ -60,11 +68,14 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
         double requestedRam,
         double allocatedBw,
         double requestedBw,
-        double allocatedStorage
+        double allocatedStorage,
+        double requestedBwFromCloudlet,
+        double diskReadRate,
+        double diskWriteRate
 ) {
     this(time, allocatedMips, requestedMips, isInMigration,
          allocatedRam, requestedRam, allocatedBw, requestedBw, allocatedStorage,
-         0.0, 0.0, 0.0);  // Default zero memory stats
+         0.0, 0.0, 0.0, requestedBwFromCloudlet, diskReadRate, diskWriteRate);  // Default zero memory stats
 }
 
 
@@ -111,9 +122,16 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
     public double getAllocatedBw() {
         return allocatedBw;
     }
+
+    public double getrequestedBwFromCloudlet(){
+        return requestedBwFromCloudlet;
+    }
+
+
     public void setAllocatedBw(double allocatedBw) {
         this.allocatedBw = allocatedBw;
     }
+
 
     public double getRequestedBw() {
         return requestedBw;
@@ -128,4 +146,15 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
     public void setAllocatedStorage(double allocatedStorage) {
         this.allocatedStorage = allocatedStorage;
     }
+
+    public double getDiskWriteRate(){
+        return this.diskWriteRate;
+    }
+
+    public double getDiskReadRate(){
+        return this.diskReadRate;
+    }
+
+
+
 }

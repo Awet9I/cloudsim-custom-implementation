@@ -18,6 +18,9 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
     private long storageSize;
     private PowerModel raPowerModel;
     private MemoryBandwidthProvisioner memoryBandwidthProvisioner;
+    private NetworkPowerModel networkPowerModel;
+    private PowerModelStorageProbabilistic storageProbabilistic;
+    
 
     /**
      * Instantiates a new PowerHost.
@@ -30,11 +33,13 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
      * @param vmScheduler    the VM scheduler
      * @param powerModel
      */
-    public MyPowerHost(int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler, PowerModel powerModel, PowerModel raPowerModel, MemoryBandwidthProvisioner memoryBandwidthProvisioner) {
+    public MyPowerHost(int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler, PowerModel powerModel, PowerModel raPowerModel, MemoryBandwidthProvisioner memoryBandwidthProvisioner, NetworkPowerModel networkPowerModel, PowerModelStorageProbabilistic storageProbabilistic) {
         super(id, ramProvisioner, bwProvisioner, storage, peList, vmScheduler, powerModel);
         this.storageSize = storage;
         this.raPowerModel = raPowerModel; 
         this.memoryBandwidthProvisioner = memoryBandwidthProvisioner;
+        this.networkPowerModel = networkPowerModel;
+        this.storageProbabilistic = storageProbabilistic;
     }
 
 
@@ -127,7 +132,9 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                             + ": %.2f", CloudSim.clock(), totalRequestedMips - totalAllocatedMips);
                 }
                 if(vm instanceof MyPowerVm){
-                   
+                    double requestedBwFromCloudlet = ((MyPowerVm) vm).getCurrentRequestedBwFromCloudlet();
+                    double requestedDiskWriteRateFromCloudlet = ((MyPowerVm) vm).getCurrentRequestedDiskWritRateFromCloudlet();
+                    double requestedDiskReadRateFromCloudlet = ((MyPowerVm) vm).getCurrentRequestedDiskReadRateFromCloudlet();
                     ((MyPowerVm) vm).addStateHistoryEntry(
                             currentTime,
                             totalAllocatedMips,
@@ -137,7 +144,10 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                             totalRequestedBw,
                             totalAllocatedBw,
                             totalAllocatedStorage,
-                            (vm.isInMigration() && !getVmsMigratingIn().contains(vm))
+                            (vm.isInMigration() && !getVmsMigratingIn().contains(vm)),
+                            requestedBwFromCloudlet,
+                            requestedDiskWriteRateFromCloudlet,
+                            requestedDiskReadRateFromCloudlet
                             
                             );
                    
@@ -256,12 +266,30 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
 	 */
     @Override
 	public boolean isSuitableForVm(Vm vm) {
-        System.out.println("Is Suitable comming from my power host");
+        //System.out.println("Is Suitable comming from my power host");
 		return (getVmScheduler().getPeCapacity() >= vm.getCurrentRequestedMaxMips()
 				&& getVmScheduler().getAvailableMips() >= vm.getCurrentRequestedTotalMips()
 				&& getRamProvisioner().isSuitableForVm(vm, vm.getCurrentRequestedRam()) && getBwProvisioner()
 				.isSuitableForVm(vm, vm.getCurrentRequestedBw()));
 	}
+
+
+    public void setNetworkPowerModel(NetworkPowerModel model) {
+        this.networkPowerModel = model;
+    }
+
+    public NetworkPowerModel getNetworkPowerModel() {
+        return this.networkPowerModel;
+    }
+
+    public void setStoragePowerModel( PowerModelStorageProbabilistic modelStorageProbabilistic){
+        this.storageProbabilistic = modelStorageProbabilistic;
+    }
+    public PowerModelStorageProbabilistic getStoragePowerModel(){
+        return this.storageProbabilistic;
+    }
+    
+    
 
    
 }

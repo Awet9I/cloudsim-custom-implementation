@@ -57,7 +57,10 @@ public class MyPowerVm extends PowerVm {
             double allocatedBw,
             double requestedBw,
             double allocatedStorage,
-            boolean isInMigration) {
+            boolean isInMigration,
+            double requestedBwFromCloudlet,
+            double diskReadRate,
+            double diskWriteRate) {
         MyPowerVmEntry newState = new MyPowerVmEntry(
                 time,
                 allocatedMips,
@@ -67,8 +70,10 @@ public class MyPowerVm extends PowerVm {
                 requestedRam,
                 allocatedBw,
                 requestedBw,
-                allocatedStorage
-                
+                allocatedStorage,
+                requestedBwFromCloudlet,
+                diskReadRate,
+                diskWriteRate
                 );
         if (!getStateHistory().isEmpty()) {
             VmStateHistoryEntry previousState = getStateHistory().get(getStateHistory().size() - 1);
@@ -104,7 +109,10 @@ public class MyPowerVm extends PowerVm {
                 ((MyPowerVmEntry) latest).getAllocatedStorage(),
                 activity.readBitsPerSecond,
                 activity.writeBitsPerSecond,
-                power
+                power,
+                ((MyPowerVmEntry) latest).getRequestedBw(),
+                ((MyPowerVmEntry) latest).getDiskReadRate(),
+                ((MyPowerVmEntry) latest).getDiskWriteRate()
             );
             if (!getStateHistory().isEmpty()) {
                 VmStateHistoryEntry previousState = getStateHistory().get(getStateHistory().size() - 1);
@@ -124,6 +132,37 @@ public class MyPowerVm extends PowerVm {
 
 public double[] getCurrentRequestedMemoryBandwidth() {
     return new double[]{0.0, 0.0}; // stubbed; replace with dynamic tracking if needed
+}
+
+
+public double getCurrentRequestedBwFromCloudlet() {
+    for (ResCloudlet rc : getCloudletScheduler().getCloudletExecList()) {
+        Cloudlet cl = rc.getCloudlet();
+        if (cl instanceof WorkloadAwareCloudlet) {
+            return ((WorkloadAwareCloudlet) cl).getRequiredBandwidth();
+        }
+    }
+    return 0.0;
+}
+
+public double getCurrentRequestedDiskWritRateFromCloudlet() {
+    for (ResCloudlet rc : getCloudletScheduler().getCloudletExecList()) {
+        Cloudlet cl = rc.getCloudlet();
+        if (cl instanceof WorkloadAwareCloudlet) {
+            return ((WorkloadAwareCloudlet) cl).getDiskWriteRate();
+        }
+    }
+    return 0.0;
+}
+
+public double getCurrentRequestedDiskReadRateFromCloudlet() {
+    for (ResCloudlet rc : getCloudletScheduler().getCloudletExecList()) {
+        Cloudlet cl = rc.getCloudlet();
+        if (cl instanceof WorkloadAwareCloudlet) {
+            return ((WorkloadAwareCloudlet) cl).getDiskReadRate();
+        }
+    }
+    return 0.0;
 }
 
 
