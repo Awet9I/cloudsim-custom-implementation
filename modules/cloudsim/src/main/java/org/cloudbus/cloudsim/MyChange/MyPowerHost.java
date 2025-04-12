@@ -2,6 +2,7 @@ package org.cloudbus.cloudsim.MyChange;
 
 import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHost;
 import org.cloudbus.cloudsim.power.PowerHostUtilizationHistory;
 import org.cloudbus.cloudsim.power.PowerVm;
@@ -20,6 +21,7 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
     private MemoryBandwidthProvisioner memoryBandwidthProvisioner;
     private NetworkPowerModel networkPowerModel;
     private PowerModelStorageProbabilistic storageProbabilistic;
+    private boolean powerOn;
     
 
     /**
@@ -40,7 +42,11 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
         this.memoryBandwidthProvisioner = memoryBandwidthProvisioner;
         this.networkPowerModel = networkPowerModel;
         this.storageProbabilistic = storageProbabilistic;
+        setPowerOn(true);
+        
     }
+
+
 
 
         @Override
@@ -184,6 +190,13 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                     )
             );
         }
+        boolean isActive = (getUtilizationMips() > 0);
+
+        PowerDatacenter dc = (PowerDatacenter) getDatacenter();
+        if(!isActive){
+            dc.releaseEmptyHosts(this);
+        }
+        
 
         addStateHistoryEntry(
                 currentTime,
@@ -196,7 +209,8 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                 hostTotalAllocatedStorage,
                 (getUtilizationMips() > 0),
                 peEntries,
-                copy
+                copy,
+                powerOn
                 );
 
 
@@ -223,7 +237,7 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
      */
     public
     void
-    addStateHistoryEntry(double time, double allocatedMips, double requestedMips, double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, boolean isActive, List<PeEntry> peEntries, List<PowerVm> vmList) {
+    addStateHistoryEntry(double time, double allocatedMips, double requestedMips, double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, boolean isActive, List<PeEntry> peEntries, List<PowerVm> vmList, boolean powerOn) {
 
         double getRamUtilization = getRamUtilization(allocatedRam, getRamProvisioner().getRam());
 
@@ -239,7 +253,8 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                 allocatedStorage,
                 peEntries,
                 vmList,
-                getRamUtilization);
+                getRamUtilization,
+                powerOn);
         if (!getStateHistory().isEmpty()) {
             HostStateHistoryEntry previousState = getStateHistory().get(getStateHistory().size() - 1);
             if (previousState.getTime() == time) {
@@ -288,8 +303,14 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
     public PowerModelStorageProbabilistic getStoragePowerModel(){
         return this.storageProbabilistic;
     }
+
+    public void setPowerOn(boolean powerOn){
+        this.powerOn = powerOn;
+    }
     
-    
+    public boolean getIsPowerOn(){
+        return this.powerOn;
+    }
 
    
 }

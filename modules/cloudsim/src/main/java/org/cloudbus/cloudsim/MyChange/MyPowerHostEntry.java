@@ -15,6 +15,7 @@ public class MyPowerHostEntry extends HostStateHistoryEntry {
     private List<PeEntry> peEntries;
     private List<PowerVm> vms;
     private double ramUtilization;
+    private boolean powerOn;
 
     /**
      * Instantiates a new host state history entry.
@@ -25,7 +26,7 @@ public class MyPowerHostEntry extends HostStateHistoryEntry {
      * @param isActive      the is active
      */
     public MyPowerHostEntry(double time, double allocatedMips, double requestedMips, boolean isActive,
-                            double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, List<PeEntry> peEntries, List<PowerVm> vms, double ramUtilization) {
+                            double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, List<PeEntry> peEntries, List<PowerVm> vms, double ramUtilization, boolean powerOn) {
         super(time, allocatedMips, requestedMips, isActive);
 
         this.allocatedRam = allocatedRam;
@@ -36,6 +37,7 @@ public class MyPowerHostEntry extends HostStateHistoryEntry {
         this.peEntries = peEntries;
         this.vms = vms;
         this.ramUtilization = ramUtilization;
+        this.powerOn = powerOn;
     }
 
     public double getAllocatedRam() {
@@ -88,6 +90,14 @@ public class MyPowerHostEntry extends HostStateHistoryEntry {
     }
     public void setAllocatedStorage(double allocatedStorage) {
         this.allocatedStorage = allocatedStorage;
+    }
+
+    public void setPowerOn(boolean powerOn){
+        this.powerOn = powerOn;
+    }
+
+    public boolean getIsPowerOn(){
+        return this.powerOn;
     }
     
 }

@@ -110,9 +110,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(0.01, 0.00001,true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 30, 30)
-                )
+                            new NetworkPowerModel(10, 0.015,true, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85)                )
             );
         }
 
@@ -141,9 +140,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(0.01, 0.00001,true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 30, 30)
-                    )
+                            new NetworkPowerModel(10, 0.015,true, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85)                    )
             );
         }
 
@@ -172,9 +170,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9),
-                            new NetworkPowerModel(0.01, 0.00001,true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 30, 30)
-                    )
+                            new NetworkPowerModel(10, 0.015,true, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85)                    )
             );
         }
 
@@ -217,9 +214,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(0.01, 0.00001,true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 30, 30)
-                        )
+                            new NetworkPowerModel(10, 0.015,true, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85)                        )
             );
         }
         /*
@@ -717,6 +713,13 @@ public class Experiment1 {
                                     } else{
                                         cpu_power = ((MyPowerHost) host).getPowerModel().getPower(cpuUtilization);
                                     }
+
+                                    if(!((MyPowerHostEntry) entry).getIsPowerOn()){
+                                        storagePower = 0.0;
+                                        idle_power = 0.0;
+                                        bwPower = 0.0;
+
+                                    }
     
 
                                      Log.print(
@@ -724,6 +727,7 @@ public class Experiment1 {
                                         ", Data Center ID: " + datacenter.getId() + 
                                         ", Data Center Name: " + datacenter.getName() +
                                         ", Host ID: " + host.getId() +
+                                        ", Power on: " + ((MyPowerHostEntry) entry).getIsPowerOn() +
                                         ", Host Active: " + entry.isActive() +
                                         ", Total PEs: " + host.getNumberOfPes() +
                                         ", Free PEs: " + freePes +
