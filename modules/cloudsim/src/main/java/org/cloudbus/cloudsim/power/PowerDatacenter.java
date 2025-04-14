@@ -54,7 +54,7 @@ public class PowerDatacenter extends Datacenter {
 	private double power;
 
 	/** Indicates if migrations are disabled or not. */
-	private boolean disableMigrations;
+	private boolean disableMigrations = true;
 
 	/** The last time submitted cloudlets were processed. */
 	private double cloudletSubmitted;
@@ -86,7 +86,7 @@ public class PowerDatacenter extends Datacenter {
 
 		this.broker = broker;
 		setPower(0.0);
-		setDisableMigrations(false);
+		setDisableMigrations(true);
 		setCloudletSubmitted(-1);
 		setMigrationCount(0);
 	}
@@ -532,7 +532,8 @@ public class PowerDatacenter extends Datacenter {
 	 * @return true, if  migrations are disable; false otherwise
 	 */
 	public boolean isDisableMigrations() {
-		return disableMigrations;
+		//return disableMigrations;
+		return true;
 	}
 
 	/**

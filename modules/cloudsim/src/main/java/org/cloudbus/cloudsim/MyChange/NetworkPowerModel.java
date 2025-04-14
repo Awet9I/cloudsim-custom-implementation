@@ -19,12 +19,12 @@ public class NetworkPowerModel {
         this.beta2 = beta2;
         this.efficient = efficient;
         this.maxBandwidth = maxBandwidth;
-        setStaticPower(0.2 * getMaxPower());
+        setStaticPower(0.75 * getMaxPower());
         setConstant((getMaxPower() - getStaticPower()));
     }
 
     public double getEfficiency(double rateMbps) {
-        return beta1  + beta2 * rateMbps;
+        return beta1 * rateMbps + beta2 * rateMbps * rateMbps;
         // how many bit per watt 
         //return 0.10 * maxBandwidth + 0.004 * maxBandwidth * maxBandwidth;
     }
@@ -42,7 +42,7 @@ public class NetworkPowerModel {
         if (!efficient){
             return getStaticPower() + getConstant() * utilization; // inefficient fallback based on linear model 
         } 
-        double efficiency =  Math.min(getEfficiency(rateMbps), 30.0); // Cap at 20 Mbps/W
+        double efficiency =  Math.min(getEfficiency(rateMbps), 500.0); // Cap at 20 Mbps/W
         return (rateMbps > 0) ?  (rateMbps / efficiency) : efficiency;
     }
 

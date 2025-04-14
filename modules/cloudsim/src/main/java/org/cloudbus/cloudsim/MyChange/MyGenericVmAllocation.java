@@ -16,17 +16,20 @@ import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.power.PowerDatacenter;
+import org.cloudbus.cloudsim.power.PowerHost;
 
 public class MyGenericVmAllocation extends VmAllocationPolicy {
     private final Map<String, Host> vmTable = new HashMap<>();
     private String strategy;
     private int rrIndex = 0; // for round robin
     private PowerDatacenter datacenter;
+    private MyPowerVmAllocationPolicyMigrationStaticThreshold mig;
     
 
-    public MyGenericVmAllocation(List<? extends Host> list, String initialStrategy) {
+    public MyGenericVmAllocation(List<? extends Host> list, String initialStrategy, MyPowerVmAllocationPolicyMigrationStaticThreshold mig) {
         super(list);
         this.strategy = initialStrategy.toLowerCase();
+        this.mig = mig; // Migration treshold setter
 
     }
 
@@ -135,8 +138,22 @@ public class MyGenericVmAllocation extends VmAllocationPolicy {
         List<Map<String, Object>> result = new ArrayList<>();
         
         for(Host host : datacenter.getHostList()){
+            
             for(Vm vm : host.getVmList()){
-                while (vm.getCloudletScheduler().isFinishedCloudlets()) {
+
+                boolean util = mig.isHostUnderUtilized((PowerHost)host);
+                System.out.println(host.getId() + " is under utilized  " + util);
+               
+                if(util){
+                    PowerHost newHost = mig.findHostForVm(vm);
+                    System.out.println("new hos is " + newHost.getId());
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("vm", vm);
+                    entry.put("host", newHost);
+                    result.add(entry);
+                }
+
+                /*while (vm.getCloudletScheduler().isFinishedCloudlets()) {
                     Map<String, Object> entry = new HashMap<>();
                     entry.put("vm", vm);
                     entry.put("host", host);
@@ -144,7 +161,7 @@ public class MyGenericVmAllocation extends VmAllocationPolicy {
                     Cloudlet cl = vm.getCloudletScheduler().getNextFinishedCloudlet();
                     System.out.println("Cloudlet " + cl.getCloudletId() + " Finished" );
                 }
-            }
+            }*/
         }
 
 
@@ -160,6 +177,7 @@ public class MyGenericVmAllocation extends VmAllocationPolicy {
                 }
             }
         }*/
+    }
         return result;
         
     }

@@ -194,7 +194,8 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
 
         PowerDatacenter dc = (PowerDatacenter) getDatacenter();
         if(!isActive){
-            dc.releaseEmptyHosts(this);
+            dc.releaseEmptyHosts(this); 
+            
         }
         
 

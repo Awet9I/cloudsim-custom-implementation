@@ -85,6 +85,8 @@ public class Experiment1 {
             hostList = new ArrayList<>();
         }
 
+        
+
         // http://www.spec.org/power_ssj2008/results/res2011q1/power_ssj2008-20110127-00342.html
         for (int i = 0; i < Ml110G3Hosts;i++){
             int mips = 3000;
@@ -110,8 +112,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(10, 0.015,true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 90, 85)                )
+                            new NetworkPowerModel(1, -0.000464, true, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85, true)                )
             );
         }
 
@@ -140,8 +142,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(10, 0.015,true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 90, 85)                    )
+                            new NetworkPowerModel(1, -0.000464, true, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(12, 180, 100, true)                    )
             );
         }
 
@@ -170,8 +172,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9),
-                            new NetworkPowerModel(10, 0.015,true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 90, 85)                    )
+                            new NetworkPowerModel(1, -0.000464, true, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85, true)                    )
             );
         }
 
@@ -214,8 +216,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(10, 0.015,true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 90, 85)                        )
+                            new NetworkPowerModel(1, -0.000464, true, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85, true)                        )
             );
         }
         /*
@@ -277,9 +279,9 @@ public class Experiment1 {
                 arch, os, vmm, hostList, time_zone, cost, costPerMem, costPerStorage, costPerBw);
 
 
-        // 6. Finally, we need to create a PowerDatacenter object.
+        MyPowerVmAllocationPolicyMigrationStaticThreshold mig = new MyPowerVmAllocationPolicyMigrationStaticThreshold(hostList, null, 0.9, 0.2);
         PowerDatacenter datacenter = null;
-        MyGenericVmAllocation genericVmAllocation = new MyGenericVmAllocation(hostList, "bestfit");
+        MyGenericVmAllocation genericVmAllocation = new MyGenericVmAllocation(hostList, "firstfit", mig);
         try {
             //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 300);
             //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicyResilient(hostList), storageList, 300);
@@ -419,9 +421,9 @@ public class Experiment1 {
                 cloudlet.setVmId(cloudlet_id);
                 cloudlet.setUserId(broker_id);*/
 
-                ram_aware_Cloudlet.setRequiredBandwidth((networkReceivedThroughput + networkTransmittedThroughput)/1000);
-                ram_aware_Cloudlet.setDiskReadRate(diskReadThroughput/1000);
-                ram_aware_Cloudlet.setDiskWriteRate(diskWriteThroughput/1000);
+                ram_aware_Cloudlet.setRequiredBandwidth((networkReceivedThroughput + networkTransmittedThroughput));
+                ram_aware_Cloudlet.setDiskReadRate(diskReadThroughput);
+                ram_aware_Cloudlet.setDiskWriteRate(diskWriteThroughput);
                 ram_aware_Cloudlet.setVmId(cloudlet_id);
                 ram_aware_Cloudlet.setUserId(broker_id);
                 cloudletsFromDataset.add(ram_aware_Cloudlet);
@@ -469,7 +471,8 @@ public class Experiment1 {
             int[] hosts_datacenter = {200*2, 185*1, 190*1, 275*1};
             int[] hosts_datacenter_id_shifts = {0, hosts_datacenter[0], hosts_datacenter[0] + hosts_datacenter[1], hosts_datacenter[0] + hosts_datacenter[1] + hosts_datacenter[2]};
             datacenters = new ArrayList<PowerDatacenter>();
-            PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 100*2, 64*2, 64*2, 80*2, null, hosts_datacenter_id_shifts[0], broker);
+            PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 150*2, 150*2, 150*2, 150*2, null, hosts_datacenter_id_shifts[0], broker);
+
             //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 0, 0, 1, 1, null, hosts_datacenter_id_shifts[0], broker);
             //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 100*2, 40*2, 40*2, 20*2, null, hosts_datacenter_id_shifts[0]);
             //PowerDatacenter datacenter2 = createDatacenter("Datacenter_2", 20*1, 100*1, 40*1, 25*1, datacenter1.getHostList(), hosts_datacenter_id_shifts[1]);
@@ -523,7 +526,7 @@ public class Experiment1 {
                 System.err.println("Can't create file");
             }
             //String msg = "time;datacenter_name;host_id;type;active;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;ram;available_ram;bw;available_bw;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
-            String msg = "time;datacenter_id;datacenter_name;host_id;type;active;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;dvfs_available;frequency_range;voltage_range;cpu_utilization;cpu_power;ram;allocated_ram;ram_power;bw;available_bw;storage;available_storage;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
+            String msg = "time;datacenter_id;datacenter_name;host_id;type;active;power_on;number_of_pes;available_pes;mips;available_mips;utilization_per_pe;dvfs_available;frequency_range;voltage_range;cpu_utilization;cpu_power;ram;available_ram;ram_power;bw;available_bw;bw_power;storage;available_storage;disk_I/O;I/O_power;power_model;vms\n"; // frequencies;mips_per_frequency;cpu_idle_power_per_frequency;cpu_full_power_per_frequency;
 
 
             HashMap<Integer, Integer> vm_ram_map = new HashMap<>();
@@ -646,6 +649,7 @@ public class Experiment1 {
                                 String vmInfo = "";
                                 double vmRam = 0.0;
                                 double totalHostBw = 0.0;
+                                double clBW = 0.0;
                                 double totalHostDiskWriteRate = 0.0;
                                 double totalHostDiskReadRate = 0.0;
                                 for (Vm vm : ((MyPowerHostEntry) entry).getVms()){
@@ -662,22 +666,34 @@ public class Experiment1 {
 
                                         for(VmStateHistoryEntry vmentry : vmStateHistoryEntry){
                                             vmRam += ((MyPowerVmEntry) vmentry).getRamPower();
-                                            totalHostDiskWriteRate += ((MyPowerVmEntry) vmentry).getDiskWriteRate();
-                                            totalHostDiskReadRate += ((MyPowerVmEntry) vmentry).getDiskReadRate();
+                                        }
+
+                                        for(VmStateHistoryEntry vmentry : vmStateHistoryEntry){
+                                            clBW = ((MyPowerVmEntry) vmentry).getrequestedBwFromCloudlet();
+                                            System.out.println("Cl BW: " + clBW);
+                                            if(clBW != 0){
+                                                break;
+                                            } else{
+                                                continue;
+                                            }
+                                        }
 
                                         }
-                                        List<VmStateHistoryEntry> history = ((MyPowerVm) vm).getStateHistory();
-                                        MyPowerVmEntry latest = (MyPowerVmEntry) history.get(history.size() - 1);
-                                        totalHostBw += latest.getRequestedBw();
+
+                                        totalHostDiskWriteRate += ((MyPowerVmEntry) vm.getStateHistory().get(index)).getDiskWriteRate();
+                                        totalHostDiskReadRate += ((MyPowerVmEntry) vm.getStateHistory().get(index)).getDiskReadRate();
+                                        
+                                        totalHostBw += clBW;
                                         
                                     }
-                                }
+                                
 
                                 System.out.println("Total DWR: " + totalHostDiskWriteRate);
                                 System.out.println("Total DRR: " + totalHostDiskReadRate);
 
                                 double bwPower = ((MyPowerHost) host).getNetworkPowerModel().getPower(totalHostBw);
                                 double storagePower = ((MyPowerHost) host).getStoragePowerModel().getPower(totalHostDiskReadRate, totalHostDiskWriteRate);
+                                double diskIO = totalHostDiskReadRate + totalHostDiskWriteRate;
 
                                 /**for (int rate = 50; rate <= 800; rate += 50) {
                                     double newRate = rate;
@@ -757,7 +773,7 @@ public class Experiment1 {
                                     );
 
                                 //msg += entry.getTime() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" + host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency
-                                msg += entry.getTime() + ";" + datacenter.getId() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + dvfs + ";" + frequencyRange + ";" + voltageRange + ";" +  cpuUtilization + ";" + ((MyPowerHost) host ).getPowerModel().getPower(cpuUtilization) + ";" + host.getRamProvisioner().getRam() + ";"  + (((MyPowerHostEntry) entry).getAllocatedRam()) + ";" + vmRam + ";"+ host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - ((MyPowerHostEntry) entry).getAllocatedBw()) + ";" + ((MyPowerHost) host).getStorageSize() + ";" + (((MyPowerHost) host).getStorageSize() - ((MyPowerHostEntry) entry).getAllocatedStorage()) + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency 
+                                msg += entry.getTime() + ";" + datacenter.getId() + ";" + datacenter.getName() + ";" +  host.getId() + ";host;" + entry.isActive() + ";" + ((MyPowerHostEntry) entry).getIsPowerOn() + ";" + host.getNumberOfPes() + ";" +  freePes + ";" + host.getTotalMips() + ";" + (host.getTotalMips() - entry.getAllocatedMips()) + ";" + peUtilizationInfo + ";" + dvfs + ";" + frequencyRange + ";" + voltageRange + ";" + cpuUtilization + ";" + cpu_power + ";" + host.getRamProvisioner().getRam() + ";" + (host.getRamProvisioner().getRam() - ((MyPowerHostEntry) entry).getAllocatedRam()) + ";" + vmRam + ";" + host.getBwProvisioner().getBw() + ";" + (host.getBwProvisioner().getBw() - totalHostBw) + ";" + String.format("%.7f",bwPower)+ ";" + ((MyPowerHost) host).getStorageSize() + ";" + (((MyPowerHost) host).getStorageSize() - ((MyPowerHostEntry) entry).getAllocatedStorage()) + ";" +  diskIO + ";" + storagePower + ";" + powermodel + ";" + vmInfo + "\n"; // + ";" + frequencies + ";" + mipsPerFrequency + ";" + cpuIdlePerFrequency + ";" + cpuFullPerFrequency 
 
                                 /*}*/
 

@@ -5,14 +5,24 @@ public class PowerModelStorageProbabilistic {
     private final double idlePower;        // Watts
     private final double maxReadRate;      // MBps
     private final double maxWriteRate;     // MBps
+    private boolean efficient;
 
-    public PowerModelStorageProbabilistic(double idlePowerWatts, double maxReadMBps, double maxWriteMBps) {
+    public PowerModelStorageProbabilistic(double idlePowerWatts, double maxReadMBps, double maxWriteMBps, boolean efficient) {
         this.idlePower = idlePowerWatts;
         this.maxReadRate = maxReadMBps;
         this.maxWriteRate = maxWriteMBps;
+        this.efficient = efficient;
     }
 
     public double getPower(double readRate, double writeRate) {
+        if(!efficient){
+            double dynamicPowerRange = 9.0 - idlePower;
+
+            double maxTotalRate = maxReadRate + maxWriteRate;
+            double totalRate = readRate + writeRate;
+            return idlePower + dynamicPowerRange*(totalRate / maxTotalRate);
+        }
+        
         double totalRate = readRate + writeRate;
         double maxTotalRate = maxReadRate + maxWriteRate;
 
