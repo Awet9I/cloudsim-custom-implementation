@@ -17,6 +17,7 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHost;
+import org.cloudbus.cloudsim.power.PowerVm;
 
 public class MyGenericVmAllocation extends VmAllocationPolicy {
     private final Map<String, Host> vmTable = new HashMap<>();
@@ -116,6 +117,13 @@ public class MyGenericVmAllocation extends VmAllocationPolicy {
                     return true;
                 }
                 return false;
+            case "pabfd":
+                boolean pabfd = PlacementStrategies.policyPABFD(vm, hostList);
+                if(pabfd){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    System.out.println("VM " + vm.getId() + " Placed on host: " + vm.getHost().getId() + " Using pabfd policy");
+                    return true;
+                }
             default:
                 Log.printLine("Unknown strategy: " + strategy);
                 return false;
@@ -123,6 +131,7 @@ public class MyGenericVmAllocation extends VmAllocationPolicy {
     }
   
 
+    
     @Override
     public boolean allocateHostForVm(Vm vm, Host host) {
         if (host != null && host.isSuitableForVm(vm) && host.vmCreate(vm)) {
@@ -131,6 +140,7 @@ public class MyGenericVmAllocation extends VmAllocationPolicy {
         }
         return false;
     }
+    
 
     @Override
     public List<Map<String, Object>> optimizeAllocation(List<? extends Vm> vmList) {
@@ -181,10 +191,6 @@ public class MyGenericVmAllocation extends VmAllocationPolicy {
         return result;
         
     }
-
-
-
-  
 
 
 

@@ -90,7 +90,9 @@ public class MyPowerVm extends PowerVm {
     public void logCloudletMemoryUsage(Cloudlet cloudlet, double duration, PowerModelRamDataSheetBased ramModel) {
     MemoryActivity activity = MemoryAccessEstimator.estimateBitRates(cloudlet, duration);
 
-    double power = ramModel.getPower(activity.readBitsPerSecond, activity.writeBitsPerSecond, 1.0);
+    // get rid of parameter dutycycle, calculate duty cycle at the power model class, instead pass allocated memory to the vm
+    double allocatedMemory = getCurrentAllocatedRam();
+    double power = ramModel.getPower(activity.readBitsPerSecond, activity.writeBitsPerSecond, allocatedMemory);
     double energy = power * duration;
     cumulativeRamEnergyJoules += energy;
 

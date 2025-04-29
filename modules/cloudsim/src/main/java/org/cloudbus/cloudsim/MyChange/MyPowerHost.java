@@ -49,7 +49,7 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
 
 
 
-        @Override
+    @Override
     public boolean vmCreate(Vm vm) {
         boolean result = super.vmCreate(vm);
         if (result && vm instanceof MyPowerVm) {
@@ -193,10 +193,10 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
         boolean isActive = (getUtilizationMips() > 0);
 
         PowerDatacenter dc = (PowerDatacenter) getDatacenter();
-        if(!isActive){
+        /**if(!isActive){
             dc.releaseEmptyHosts(this); 
             
-        }
+        }*/
         
 
         addStateHistoryEntry(

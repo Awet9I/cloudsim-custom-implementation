@@ -97,7 +97,7 @@ public class Experiment1 {
             }
 
             int hostId = i + idShift;
-            int ram = 16_000;   // changed from 4000 mb 22.03.2025
+            int ram = 4000;   // changed from 4000 mb 22.03.2025
             int storage = 160_000;
             int bandwidth = 1000;
             hostList.add(
@@ -112,8 +112,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(1, -0.000464, true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 90, 85, true)                )
+                            new NetworkPowerModel(1, -0.000464, false, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85, false)                )
             );
         }
 
@@ -127,7 +127,7 @@ public class Experiment1 {
             }
 
             int hostId = i + Ml110G3Hosts + idShift;
-            int ram = 16_000;
+            int ram = 4000;
             int storage = 160_000;
             int bandwidth = 1000;
             hostList.add(
@@ -142,8 +142,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(1, -0.000464, true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(12, 180, 100, true)                    )
+                            new NetworkPowerModel(1, -0.000464, false, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(12, 180, 100, false)                    )
             );
         }
 
@@ -172,8 +172,8 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9),
-                            new NetworkPowerModel(1, -0.000464, true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 90, 85, true)                    )
+                            new NetworkPowerModel(1, -0.000464, false, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85, false)                    )
             );
         }
 
@@ -216,8 +216,9 @@ public class Experiment1 {
                             //new PowerModelRamDynamic(50, 0.2, 10, 5)
                             new PowerModelRamDataSheetBased(),
                             new MemoryBandwidthProvisioner(1e9, 1e9), // 1 Gbps each
-                            new NetworkPowerModel(1, -0.000464, true, bandwidth), // beta1 beta2 efficient mode
-                            new PowerModelStorageProbabilistic(5, 90, 85, true)                        )
+                            new NetworkPowerModel(1, -0.000464, false, bandwidth), // beta1 beta2 efficient mode
+                            new PowerModelStorageProbabilistic(5, 90, 85, false)                        
+                            )
             );
         }
         /*
@@ -281,11 +282,11 @@ public class Experiment1 {
 
         MyPowerVmAllocationPolicyMigrationStaticThreshold mig = new MyPowerVmAllocationPolicyMigrationStaticThreshold(hostList, null, 0.9, 0.2);
         PowerDatacenter datacenter = null;
-        MyGenericVmAllocation genericVmAllocation = new MyGenericVmAllocation(hostList, "firstfit", mig);
+        MyGenericVmAllocation genericVmAllocation = new MyGenericVmAllocation(hostList, "pabfd", mig);
         try {
             //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 300);
             //datacenter = new PowerDatacenter(name, characteristics, new VmAllocationPolicyResilient(hostList), storageList, 300);
-            datacenter = new PowerDatacenter(name, characteristics, genericVmAllocation, storageList, 300, broker);
+            datacenter = new PowerDatacenter(name, characteristics, new PowerVmAllocationPolicySimple(hostList), storageList, 300, broker);
             genericVmAllocation.setDatacenter(datacenter);
             // datacenter = new PowerDatacenter(name, characteristics, new PowerVmAllocationPolicyMigrationStaticThreshold(hostList, new PowerVmSelectionPolicyRandomSelection(), 0.92), storageList, 300);
         } catch (Exception e) {
@@ -354,6 +355,12 @@ public class Experiment1 {
                 String vmm = "Xen"; //VMM name
                 
 
+                int memoryMB = (int) (memoryUsage / 1024);
+                double newCPUUsage = (CPUUsage * 0.5) + CPUUsage;
+                int newMemoryUsage = (int) ((memoryMB * 0.5) + memoryMB);
+                long totalBW =  (long) (networkReceivedThroughput + networkTransmittedThroughput);
+                long newTotalBW = (long) ((totalBW)*2) + totalBW;
+
                 /*if (networkReceivedThroughput >= networkTransmittedThroughput){
                     bw = (long) networkReceivedThroughput;
                 }else{
@@ -371,7 +378,11 @@ public class Experiment1 {
 
                 //Vm  vm = new Vm(vm_id, broker_id, mips*CPUCores, CPUCores, (int) (memoryCapacityProvisioned/1000), bw, size, vmm, new CloudletSchedulerTimeShared());
                 //MyPowerVm vm = new MyPowerVm(vm_id, broker_id, CPUUsage, CPUCores,  (int) (memoryUsage / 1000), (long) ((networkReceivedThroughput + networkTransmittedThroughput) / 1000), size, 1, vmm, new CloudletSchedulerDynamicWorkload(CPUUsage, CPUCores), 300);
-                MyPowerVm vm = new MyPowerVm(vm_id, broker_id, CPUUsage, CPUCores,  (int) ((memoryUsage / 1000)), (long) (networkReceivedThroughput + networkTransmittedThroughput), size, 1, vmm, new CloudletSchedulerSpaceShared(), 300);
+
+
+
+                //MyPowerVm vm = new MyPowerVm(vm_id, broker_id, CPUUsage, CPUCores,  (int) ((memoryUsage / 1000)), (long) (networkReceivedThroughput + networkTransmittedThroughput), size, 1, vmm, new CloudletSchedulerSpaceShared(), 300);
+                MyPowerVm vm = new MyPowerVm(vm_id, broker_id, CPUUsage, CPUCores,  memoryMB, totalBW, size, 1, vmm, new CloudletSchedulerSpaceShared(), 300);
                 vmFromDataset.add(vm);
                 vm_id++;
             }
@@ -409,19 +420,25 @@ public class Experiment1 {
                 double networkReceivedThroughput = Double.parseDouble(features[9]);
                 double networkTransmittedThroughput = Double.parseDouble(features[10]);
 
+                int memoryMB = (int) (memoryUsage / 1024);
+                int newMemoryUsage = (int) ((memoryMB * 0.5) + memoryMB);
+                double newDiskWriteThroughput = ((diskWriteThroughput * 2) + diskWriteThroughput);
+                double newDiskReadThroughput = ((diskReadThroughput * 2) + diskReadThroughput);
+                long totalBW =  (long) (networkReceivedThroughput + networkTransmittedThroughput);
+                long newTotalBW = (long) ((totalBW)*2) + totalBW;
 
                 long length = 24 * simulation_limit;
                 long fileSize = 300;
                 long outputSize = 300;
                 int pesNumber = 1;
 
-                WorkloadAwareCloudlet ram_aware_Cloudlet = new WorkloadAwareCloudlet(cloudlet_id, length, CPUCores, fileSize, outputSize, new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(), (memoryUsage/1000));
+                WorkloadAwareCloudlet ram_aware_Cloudlet = new WorkloadAwareCloudlet(cloudlet_id, length, CPUCores, fileSize, outputSize, new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(), newMemoryUsage);
 
                 /*Cloudlet cloudlet = new Cloudlet(cloudlet_id, length, CPUCores, fileSize, outputSize, new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull());
                 cloudlet.setVmId(cloudlet_id);
                 cloudlet.setUserId(broker_id);*/
 
-                ram_aware_Cloudlet.setRequiredBandwidth((networkReceivedThroughput + networkTransmittedThroughput));
+                ram_aware_Cloudlet.setRequiredBandwidth(totalBW);
                 ram_aware_Cloudlet.setDiskReadRate(diskReadThroughput);
                 ram_aware_Cloudlet.setDiskWriteRate(diskWriteThroughput);
                 ram_aware_Cloudlet.setVmId(cloudlet_id);
@@ -471,13 +488,27 @@ public class Experiment1 {
             int[] hosts_datacenter = {200*2, 185*1, 190*1, 275*1};
             int[] hosts_datacenter_id_shifts = {0, hosts_datacenter[0], hosts_datacenter[0] + hosts_datacenter[1], hosts_datacenter[0] + hosts_datacenter[1] + hosts_datacenter[2]};
             datacenters = new ArrayList<PowerDatacenter>();
-            PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 150*2, 150*2, 150*2, 150*2, null, hosts_datacenter_id_shifts[0], broker);
 
-            //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 0, 0, 1, 1, null, hosts_datacenter_id_shifts[0], broker);
+
+            //PowerDatacenter datacenter1 = createDatacenter("Datacenter_2", 75*2, 75*2, 75*2, 75*2, null, hosts_datacenter_id_shifts[0], broker);
+            //PowerDatacenter datacenter1 = createDatacenter("Datacenter_3", 50*2, 50*2, 50*2, 50*2, null, hosts_datacenter_id_shifts[0], broker);
+
+            //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 150*2, 150*2, 150*2, 150*2, null, hosts_datacenter_id_shifts[0], broker);
+
+
+
+
             //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 100*2, 40*2, 40*2, 20*2, null, hosts_datacenter_id_shifts[0]);
             //PowerDatacenter datacenter2 = createDatacenter("Datacenter_2", 20*1, 100*1, 40*1, 25*1, datacenter1.getHostList(), hosts_datacenter_id_shifts[1]);
             //PowerDatacenter datacenter3 = createDatacenter("Datacenter_3", 0*1, 40*1, 120*1, 30*1, datacenter2.getHostList(), hosts_datacenter_id_shifts[2]);
             //PowerDatacenter datacenter4 = createDatacenter("Datacenter_4", 80*1, 90*1, 70*1, 35*1, datacenter3.getHostList(), hosts_datacenter_id_shifts[3]);
+
+
+
+
+            //PowerDatacenter datacenter1 = createDatacenter("Datacenter_1", 200*2, 200*2, 200*2, 0, null, hosts_datacenter_id_shifts[0], broker);
+            //PowerDatacenter datacenter1 = createDatacenter("Datacenter_2", 100*2, 100*2, 100*2, 0, null, hosts_datacenter_id_shifts[0], broker);
+            PowerDatacenter datacenter1 = createDatacenter("Datacenter_3", 68*2, 66*2, 66*2, 0, null, hosts_datacenter_id_shifts[0], broker);
 
             System.out.println(datacenter1.getHostList().size());
             //System.out.println(datacenter2.getHostList().size());
@@ -665,7 +696,9 @@ public class Experiment1 {
                                         List<VmStateHistoryEntry> vmStateHistoryEntry = ((MyPowerVm) vm).getStateHistory();
 
                                         for(VmStateHistoryEntry vmentry : vmStateHistoryEntry){
-                                            vmRam += ((MyPowerVmEntry) vmentry).getRamPower();
+                                            PowerModelRamDataSheetBased ramDataSheetBased = (PowerModelRamDataSheetBased)((MyPowerHost) host).getPowerModelRam();
+                                            //vmRam += ((MyPowerVmEntry) vmentry).getRamPower();
+                                            vmRam += ramDataSheetBased.getPower(((MyPowerVmEntry)vmentry).getReadBitsPerSec(), ((MyPowerVmEntry)vmentry).getWriteBitsPerSec(), ((MyPowerVmEntry)vmentry).getAllocatedRam());
                                         }
 
                                         for(VmStateHistoryEntry vmentry : vmStateHistoryEntry){

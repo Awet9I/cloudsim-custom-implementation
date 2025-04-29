@@ -14,6 +14,8 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.lists.VmList;
 import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
+import org.cloudbus.cloudsim.power.PowerVm;
+import org.cloudbus.cloudsim.vmplus.disk.HddVm;
  
  /**
   * A power-aware {@link DatacenterBroker}.
@@ -42,6 +44,49 @@ import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
      public MyPowerDatacenterBroker(String name) throws Exception {
          super(name);
      }
+
+
+
+
+     	/**
+	 * Create the submitted virtual machines in a datacenter.
+	 * 
+	 * @param datacenterId Id of the chosen Datacenter
+	 * @pre $none
+	 * @post $none
+         * @see #submitVmList(java.util.List) 
+	 */
+    @Override
+	protected void createVmsInDatacenter(int datacenterId) {
+		// send as much vms as possible for this datacenter before trying the next one
+		int requestedVms = 0;
+		String datacenterName = CloudSim.getEntityName(datacenterId);
+
+		// Sort vm list based on resources on descending order.
+        CustomVmList.sortByDecreasingResourceDemand(getVmList());
+         for(Vm powerVm  : getVmList()){
+            System.out.println(powerVm.getId() + "CPU " + powerVm.getMips() + "RAM " + powerVm.getRam() + "Disk " + powerVm.getSize() + "BW " + powerVm.getBw());
+         }
+		for (Vm vm : getVmList()) {
+			if (!getVmsToDatacentersMap().containsKey(vm.getId())) {
+				if(vm instanceof HddVm){
+					Log.printLine(CloudSim.clock() + ": " + getName() + ": Trying to Create HDDVM #" + vm.getId()
+						+ " in " + datacenterName);
+				} else if(vm instanceof MyPowerVm){
+					Log.printLine(CloudSim.clock() + ": " + getName() + ": Trying to Create PoewrVM #" + vm.getId()
+						+ " in " + datacenterName);
+				}
+				
+				sendNow(datacenterId, CloudSimTags.VM_CREATE_ACK, vm);
+				requestedVms++;
+			}
+		}
+
+		getDatacenterRequestedIdsList().add(datacenterId);
+
+		setVmsRequested(requestedVms);
+		setVmsAcks(0);
+	}
  
      /*
       * fully overriden methos to create vm and submit cloudlets to them
@@ -55,6 +100,7 @@ import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
          int vmId = data[1];
          int result = data[2];
      
+        
          Vm vm = VmList.getById(getVmList(), vmId);
          incrementVmsAcks(); // must track this manually now
      
@@ -107,6 +153,10 @@ import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
         if (vm instanceof MyPowerVm) {
             double duration = cloudlet.getFinishTime() - cloudlet.getExecStartTime();
             ((MyPowerVm) vm).logCloudletMemoryUsage(cloudlet, duration, new PowerModelRamDataSheetBased());
+
+            // refer to the ram model of the vm instead of creating a new ram power model, additionally pass allocated memory of the vm
+            //((MyPowerHost) vm.getHost()).getPowerModelRam();
+            //((MyPowerVm) vm).getRam();
         }
     
         //super.processCloudletReturn(ev); // continue default handling

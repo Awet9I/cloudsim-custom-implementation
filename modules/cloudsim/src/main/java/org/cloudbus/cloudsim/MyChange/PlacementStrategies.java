@@ -6,6 +6,9 @@ import java.util.List;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.lists.VmList;
+import org.cloudbus.cloudsim.power.PowerHost;
+import org.cloudbus.cloudsim.power.PowerVm;
 
 public class PlacementStrategies {
     
@@ -178,6 +181,60 @@ public class PlacementStrategies {
     public static boolean roundRobinWithFilteringSingle(Vm vm, List<Host> hostList, int i) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'roundRobinWithFilteringSingle'");
+    }
+
+
+    public static boolean policyPABFD(Vm vm, List<Host> hostList){
+        Host allocatedHost = null;
+        double minPower = Double.MAX_VALUE;
+
+        for (Host  host: hostList) {
+            PowerHost powerHost = (PowerHost) host;
+            PowerVm powerVm = (PowerVm) vm;
+            if (powerHost.isSuitableForVm(vm)) {
+                try {
+
+                    double power = getPowerAfterAllocation(powerHost, powerVm);
+                    if (power < minPower) {
+                        minPower = power;
+                        allocatedHost = host;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        if (allocatedHost != null && allocatedHost.vmCreate(vm)) {
+            //getVmTable().put(vm.getUid(), allocatedHost);
+            return true;
+        }
+
+        return false;
+    }
+
+    protected static double getPowerAfterAllocation(PowerHost host, PowerVm vm) throws Exception {
+        PowerHost powerHost = (PowerHost) host;
+
+        // Save the current utilization and state
+        double powerBefore = powerHost.getPower();
+
+        MyPowerHost myPowerHost = (MyPowerHost) powerHost;
+        double ramPowerBefore = myPowerHost.getPowerModelRam().getPower(powerHost.getRamProvisioner().getRam() - powerHost.getRamProvisioner().getAvailableRam()/powerHost.getRamProvisioner().getRam());
+        
+
+        double totalPowerBefore = powerBefore + ramPowerBefore;
+
+        // Simulate VM allocation
+        powerHost.vmCreate(vm);
+        double powerAfter = powerHost.getPower();
+        double ramPowerAfter = myPowerHost.getPowerModelRam().getPower(vm.getRam()/powerHost.getRamProvisioner().getRam());
+        double totalPowerAfter = powerAfter + ramPowerAfter;
+        powerHost.vmDestroy(vm); // Roll back simulation
+
+        //return powerAfter - powerBefore;
+
+        return totalPowerAfter - totalPowerBefore;
     }
     
 }
