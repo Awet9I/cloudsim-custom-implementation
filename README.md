@@ -56,6 +56,7 @@ The framework introduces power models and VM placement logic that collectively r
 ### Clone the Repository
 
 ```git clone https://github.com/Awet9I/cloudsim-custom-implementation.git ``` <br />
+
 ```cd cloudsim-custom-implementation```
 
 
@@ -63,9 +64,10 @@ The framework introduces power models and VM placement logic that collectively r
 
 From the root ```modules/``` folder:
 
-```cd modules/```
+```cd modules/``` <br />
+
 ```mvn clean install```
 
 ### Run the Simulation
 ```mvn exec:java -pl cloudsim-examples \
-  -Dexec.mainClass="org.cloudbus.cloudsim.examples.Experiment```
+  -Dexec.mainClass="org.cloudbus.cloudsim.examples.Experiment"```
