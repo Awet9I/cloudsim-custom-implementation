@@ -27,6 +27,7 @@
 !modules/cloudsim-examples/src/main/java/org/cloudbus/cloudsim/examples/Experiment.java
 !modules/cloudsim/src/main/java/org/cloudbus/cloudsim/power/PowerDatacenter.java
 !.gitignore
+!README.md
 
 # Ensure the folder structure leading to these files is not ignored
 !analysis/
