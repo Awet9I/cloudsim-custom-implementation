@@ -55,7 +55,7 @@ The framework introduces power models and VM placement logic that collectively r
 
 ### Clone the Repository
 
-```git clone https://github.com/Awet9I/cloudsim-custom-implementation.git ```\\
+```git clone https://github.com/Awet9I/cloudsim-custom-implementation.git ``` <br />
 ```cd cloudsim-custom-implementation```
 
 
