@@ -1,6 +1,6 @@
 # CloudSim Custom Implementation for Multi-Resource Power Modeling
 
-This repository contains a customized CloudSim implementation and Python-based analysis tools developed as part of the master's thesis:
+This repository contains a Framework consistin of a customized CloudSim implementation and Python-based analysis developed as part of the master's thesis:
 
 > **Towards Energy Efficient Cloud Data Centers: A Multi-Resource Power Model Framework**  
 > Awet Teklemariam Ghebrekidan — Oslo Metropolitan University, Spring 2025
