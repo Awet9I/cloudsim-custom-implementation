@@ -1,23 +1,25 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.power.PowerHost;
+import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHostUtilizationHistory;
 import org.cloudbus.cloudsim.power.PowerVm;
 import org.cloudbus.cloudsim.power.models.PowerModel;
-import org.cloudbus.cloudsim.power.models.PowerModelLinear;
 import org.cloudbus.cloudsim.provisioners.BwProvisioner;
 import org.cloudbus.cloudsim.provisioners.RamProvisioner;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
-public class MyPowerHost extends PowerHostUtilizationHistory {
+public class CustomPowerHost extends PowerHostUtilizationHistory {
     private long storageSize;
     private PowerModel raPowerModel;
     private MemoryBandwidthProvisioner memoryBandwidthProvisioner;
+    private NetworkPowerModel networkPowerModel;
+    private PowerModelStorageProbabilistic storageProbabilistic;
+    private boolean powerOn;
+    
 
     /**
      * Instantiates a new PowerHost.
@@ -30,19 +32,25 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
      * @param vmScheduler    the VM scheduler
      * @param powerModel
      */
-    public MyPowerHost(int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler, PowerModel powerModel, PowerModel raPowerModel, MemoryBandwidthProvisioner memoryBandwidthProvisioner) {
+    public CustomPowerHost(int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler, PowerModel powerModel, PowerModel raPowerModel, MemoryBandwidthProvisioner memoryBandwidthProvisioner, NetworkPowerModel networkPowerModel, PowerModelStorageProbabilistic storageProbabilistic) {
         super(id, ramProvisioner, bwProvisioner, storage, peList, vmScheduler, powerModel);
         this.storageSize = storage;
         this.raPowerModel = raPowerModel; 
         this.memoryBandwidthProvisioner = memoryBandwidthProvisioner;
+        this.networkPowerModel = networkPowerModel;
+        this.storageProbabilistic = storageProbabilistic;
+        setPowerOn(true);
+        
     }
 
 
-        @Override
+
+
+    @Override
     public boolean vmCreate(Vm vm) {
         boolean result = super.vmCreate(vm);
-        if (result && vm instanceof MyPowerVm) {
-            double[] bws = ((MyPowerVm) vm).getCurrentRequestedMemoryBandwidth();
+        if (result && vm instanceof CustomPowerVm) {
+            double[] bws = ((CustomPowerVm) vm).getCurrentRequestedMemoryBandwidth();
             if (!memoryBandwidthProvisioner.allocateBandwidthForVm(vm, bws[0], bws[1])) {
                 super.vmDestroy(vm);
                 return false;
@@ -82,17 +90,15 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
         }
 
         for (Vm vm : getVmList()) {
-            //int pes = vm.getNumberOfPes();
             double totalRequestedMips = vm.getCurrentRequestedTotalMips();
             double totalAllocatedMips = getVmScheduler().getTotalAllocatedMipsForVm(vm);
 
             double totalRequestedRam = vm.getCurrentRequestedRam();
-            double totalAllocatedRam = vm.getCurrentAllocatedRam();//getVmScheduler().getTotalAllocatedMipsForVm(vm);
-
+            double totalAllocatedRam = vm.getCurrentAllocatedRam();
             double totalRequestedBw = vm.getCurrentRequestedBw();
             double totalAllocatedBw = vm.getCurrentAllocatedBw();
 
-            double totalAllocatedStorage = vm.getSize(); // vm.getCurrentAllocatedSize();
+            double totalAllocatedStorage = vm.getSize(); 
 
             if (!Log.isDisabled()) {
                 Log.formatLine(
@@ -126,9 +132,11 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                     Log.formatLine("%.2f: [Host #" + getId() + "] Under allocated MIPS for VM #" + vm.getId()
                             + ": %.2f", CloudSim.clock(), totalRequestedMips - totalAllocatedMips);
                 }
-                if(vm instanceof MyPowerVm){
-                   
-                    ((MyPowerVm) vm).addStateHistoryEntry(
+                if(vm instanceof CustomPowerVm){
+                    double requestedBwFromCloudlet = ((CustomPowerVm) vm).getCurrentRequestedBwFromCloudlet();
+                    double requestedDiskWriteRateFromCloudlet = ((CustomPowerVm) vm).getCurrentRequestedDiskWritRateFromCloudlet();
+                    double requestedDiskReadRateFromCloudlet = ((CustomPowerVm) vm).getCurrentRequestedDiskReadRateFromCloudlet();
+                    ((CustomPowerVm) vm).addStateHistoryEntry(
                             currentTime,
                             totalAllocatedMips,
                             totalRequestedMips,
@@ -137,7 +145,10 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                             totalRequestedBw,
                             totalAllocatedBw,
                             totalAllocatedStorage,
-                            (vm.isInMigration() && !getVmsMigratingIn().contains(vm))
+                            (vm.isInMigration() && !getVmsMigratingIn().contains(vm)),
+                            requestedBwFromCloudlet,
+                            requestedDiskWriteRateFromCloudlet,
+                            requestedDiskReadRateFromCloudlet
                             
                             );
                    
@@ -153,7 +164,7 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                     Log.formatLine(
                             "%.2f: [Host #" + getId() + "] VM #" + vm.getId() + " is in migration",
                             CloudSim.clock());
-                    totalAllocatedMips /= 0.9; // performance degradation due to migration - 10%
+                    totalAllocatedMips /= 0.9; 
                 }
             }
 
@@ -174,6 +185,14 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                     )
             );
         }
+        boolean isActive = (getUtilizationMips() > 0);
+
+        PowerDatacenter dc = (PowerDatacenter) getDatacenter();
+        if(!isActive){
+            dc.releaseEmptyHosts(this); 
+            
+        }
+        
 
         addStateHistoryEntry(
                 currentTime,
@@ -186,7 +205,8 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                 hostTotalAllocatedStorage,
                 (getUtilizationMips() > 0),
                 peEntries,
-                copy
+                copy,
+                powerOn
                 );
 
 
@@ -213,11 +233,11 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
      */
     public
     void
-    addStateHistoryEntry(double time, double allocatedMips, double requestedMips, double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, boolean isActive, List<PeEntry> peEntries, List<PowerVm> vmList) {
+    addStateHistoryEntry(double time, double allocatedMips, double requestedMips, double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, boolean isActive, List<PeEntry> peEntries, List<PowerVm> vmList, boolean powerOn) {
 
         double getRamUtilization = getRamUtilization(allocatedRam, getRamProvisioner().getRam());
 
-        MyPowerHostEntry newState = new MyPowerHostEntry(
+        CustomPowerHostEntry newState = new CustomPowerHostEntry(
                 time,
                 allocatedMips,
                 requestedMips,
@@ -229,7 +249,8 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                 allocatedStorage,
                 peEntries,
                 vmList,
-                getRamUtilization);
+                getRamUtilization,
+                powerOn);
         if (!getStateHistory().isEmpty()) {
             HostStateHistoryEntry previousState = getStateHistory().get(getStateHistory().size() - 1);
             if (previousState.getTime() == time) {
@@ -256,12 +277,36 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
 	 */
     @Override
 	public boolean isSuitableForVm(Vm vm) {
-        System.out.println("Is Suitable comming from my power host");
+        //System.out.println("Is Suitable comming from my power host");
 		return (getVmScheduler().getPeCapacity() >= vm.getCurrentRequestedMaxMips()
 				&& getVmScheduler().getAvailableMips() >= vm.getCurrentRequestedTotalMips()
 				&& getRamProvisioner().isSuitableForVm(vm, vm.getCurrentRequestedRam()) && getBwProvisioner()
 				.isSuitableForVm(vm, vm.getCurrentRequestedBw()));
 	}
+
+
+    public void setNetworkPowerModel(NetworkPowerModel model) {
+        this.networkPowerModel = model;
+    }
+
+    public NetworkPowerModel getNetworkPowerModel() {
+        return this.networkPowerModel;
+    }
+
+    public void setStoragePowerModel( PowerModelStorageProbabilistic modelStorageProbabilistic){
+        this.storageProbabilistic = modelStorageProbabilistic;
+    }
+    public PowerModelStorageProbabilistic getStoragePowerModel(){
+        return this.storageProbabilistic;
+    }
+
+    public void setPowerOn(boolean powerOn){
+        this.powerOn = powerOn;
+    }
+    
+    public boolean getIsPowerOn(){
+        return this.powerOn;
+    }
 
    
 }

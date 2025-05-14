@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,10 +8,10 @@ import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.CloudletScheduler;
 import org.cloudbus.cloudsim.ResCloudlet;
 import org.cloudbus.cloudsim.VmStateHistoryEntry;
-import org.cloudbus.cloudsim.MyChange.MemoryAccessEstimator.MemoryActivity;
+import org.cloudbus.cloudsim.custom_implementation.MemoryAccessEstimator.MemoryActivity;
 import org.cloudbus.cloudsim.power.PowerVm;
 
-public class MyPowerVm extends PowerVm {
+public class CustomPowerVm extends PowerVm {
     private Map<Integer, MemoryAccessEstimator.MemoryActivity> cloudletMemoryMap = new HashMap<>();
     private double cumulativeRamEnergyJoules = 0.0;
 
@@ -31,7 +31,7 @@ public class MyPowerVm extends PowerVm {
      * @param cloudletScheduler  the cloudlet scheduler
      * @param schedulingInterval the scheduling interval
      */
-    public MyPowerVm(int id, int userId, double mips, int pesNumber, int ram, long bw, long size, int priority, String vmm, CloudletScheduler cloudletScheduler, double schedulingInterval
+    public CustomPowerVm(int id, int userId, double mips, int pesNumber, int ram, long bw, long size, int priority, String vmm, CloudletScheduler cloudletScheduler, double schedulingInterval
     ) {
         super(id, userId, mips, pesNumber, ram, bw, size, priority, vmm, cloudletScheduler, schedulingInterval);
 
@@ -57,8 +57,11 @@ public class MyPowerVm extends PowerVm {
             double allocatedBw,
             double requestedBw,
             double allocatedStorage,
-            boolean isInMigration) {
-        MyPowerVmEntry newState = new MyPowerVmEntry(
+            boolean isInMigration,
+            double requestedBwFromCloudlet,
+            double diskReadRate,
+            double diskWriteRate) {
+        CustomPowerVmEntry newState = new CustomPowerVmEntry(
                 time,
                 allocatedMips,
                 requestedMips,
@@ -67,8 +70,10 @@ public class MyPowerVm extends PowerVm {
                 requestedRam,
                 allocatedBw,
                 requestedBw,
-                allocatedStorage
-                
+                allocatedStorage,
+                requestedBwFromCloudlet,
+                diskReadRate,
+                diskWriteRate
                 );
         if (!getStateHistory().isEmpty()) {
             VmStateHistoryEntry previousState = getStateHistory().get(getStateHistory().size() - 1);
@@ -85,26 +90,30 @@ public class MyPowerVm extends PowerVm {
     public void logCloudletMemoryUsage(Cloudlet cloudlet, double duration, PowerModelRamDataSheetBased ramModel) {
     MemoryActivity activity = MemoryAccessEstimator.estimateBitRates(cloudlet, duration);
 
-    double power = ramModel.getPower(activity.readBitsPerSecond, activity.writeBitsPerSecond, 1.0);
+    double allocatedMemory = getCurrentAllocatedRam();
+    double power = ramModel.getPower(activity.readBitsPerSecond, activity.writeBitsPerSecond, allocatedMemory);
     double energy = power * duration;
     cumulativeRamEnergyJoules += energy;
 
     if (!getStateHistory().isEmpty()) {
         VmStateHistoryEntry latest = getStateHistory().get(getStateHistory().size() - 1);
-        if (latest instanceof MyPowerVmEntry) {
-            MyPowerVmEntry enriched = new MyPowerVmEntry(
+        if (latest instanceof CustomPowerVmEntry) {
+            CustomPowerVmEntry enriched = new CustomPowerVmEntry(
                 latest.getTime(),
                 latest.getAllocatedMips(),
                 latest.getRequestedMips(),
                 latest.isInMigration(),
-                ((MyPowerVmEntry) latest).getAllocatedRam(),
-                ((MyPowerVmEntry) latest).getRequestedRam(),
-                ((MyPowerVmEntry) latest).getAllocatedBw(),
-                ((MyPowerVmEntry) latest).getRequestedBw(),
-                ((MyPowerVmEntry) latest).getAllocatedStorage(),
+                ((CustomPowerVmEntry) latest).getAllocatedRam(),
+                ((CustomPowerVmEntry) latest).getRequestedRam(),
+                ((CustomPowerVmEntry) latest).getAllocatedBw(),
+                ((CustomPowerVmEntry) latest).getRequestedBw(),
+                ((CustomPowerVmEntry) latest).getAllocatedStorage(),
                 activity.readBitsPerSecond,
                 activity.writeBitsPerSecond,
-                power
+                power,
+                ((CustomPowerVmEntry) latest).getRequestedBw(),
+                ((CustomPowerVmEntry) latest).getDiskReadRate(),
+                ((CustomPowerVmEntry) latest).getDiskWriteRate()
             );
             if (!getStateHistory().isEmpty()) {
                 VmStateHistoryEntry previousState = getStateHistory().get(getStateHistory().size() - 1);
@@ -112,7 +121,6 @@ public class MyPowerVm extends PowerVm {
                     getStateHistory().set(getStateHistory().size() - 1, enriched);
                     return;
                 }
-            //getStateHistory().set(getStateHistory().size() - 1, enriched);
             
         }
 
@@ -124,6 +132,37 @@ public class MyPowerVm extends PowerVm {
 
 public double[] getCurrentRequestedMemoryBandwidth() {
     return new double[]{0.0, 0.0}; // stubbed; replace with dynamic tracking if needed
+}
+
+
+public double getCurrentRequestedBwFromCloudlet() {
+    for (ResCloudlet rc : getCloudletScheduler().getCloudletExecList()) {
+        Cloudlet cl = rc.getCloudlet();
+        if (cl instanceof WorkloadAwareCloudlet) {
+            return ((WorkloadAwareCloudlet) cl).getRequiredBandwidth();
+        }
+    }
+    return 0.0;
+}
+
+public double getCurrentRequestedDiskWritRateFromCloudlet() {
+    for (ResCloudlet rc : getCloudletScheduler().getCloudletExecList()) {
+        Cloudlet cl = rc.getCloudlet();
+        if (cl instanceof WorkloadAwareCloudlet) {
+            return ((WorkloadAwareCloudlet) cl).getDiskWriteRate();
+        }
+    }
+    return 0.0;
+}
+
+public double getCurrentRequestedDiskReadRateFromCloudlet() {
+    for (ResCloudlet rc : getCloudletScheduler().getCloudletExecList()) {
+        Cloudlet cl = rc.getCloudlet();
+        if (cl instanceof WorkloadAwareCloudlet) {
+            return ((WorkloadAwareCloudlet) cl).getDiskReadRate();
+        }
+    }
+    return 0.0;
 }
 
 

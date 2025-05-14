@@ -1,0 +1,209 @@
+package org.cloudbus.cloudsim.custom_implementation;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.cloudbus.cloudsim.Host;
+import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.VmAllocationPolicy;
+import org.cloudbus.cloudsim.power.PowerDatacenter;
+import org.cloudbus.cloudsim.power.PowerHost;
+
+public class GenericVmAllocation extends VmAllocationPolicy {
+    private final Map<String, Host> vmTable = new HashMap<>();
+    private String strategy;
+    private int rrIndex = 0; // for round robin
+    private PowerDatacenter datacenter;
+    private CustomPowerVmAllocationPolicyMigrationStaticThreshold mig;
+    
+
+    public GenericVmAllocation(List<? extends Host> list, String initialStrategy, CustomPowerVmAllocationPolicyMigrationStaticThreshold mig) {
+        super(list);
+        this.strategy = initialStrategy.toLowerCase();
+        this.mig = mig; // Migration treshold setter
+
+    }
+
+
+    public void setDatacenter(PowerDatacenter datacenter){
+        this.datacenter = datacenter;
+    }
+
+    public PowerDatacenter getPowerDatacenter(){
+        return this.datacenter;
+    }
+
+    // Allow runtime strategy update
+    public void setStrategy(String strategy) {
+        this.strategy = strategy.toLowerCase();
+        Log.printLine("VM Allocation Strategy changed to: " + this.strategy);
+    }
+
+    @Override
+    public boolean allocateHostForVm(Vm vm) {
+        List<Host> hostList = getHostList();
+
+        switch (strategy) {
+            case "firstfit":
+                boolean res = PlacementStrategies.firstFit(vm, hostList);
+                if(res){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    return true;
+                }
+                return false;
+            case "bestfit":
+                boolean bfres = PlacementStrategies.bestFit(vm, hostList);
+                if(bfres){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    return true;
+                }
+                return false;
+            case "worstfit":
+                boolean wfres = PlacementStrategies.worstFit(vm, hostList);
+                if(wfres){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    return true;
+                }
+                return false;
+            case "binpacking":
+                boolean binres =PlacementStrategies.binPackingSingle(vm, hostList);
+                if(binres){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    return true;
+                }
+                return false;
+            case "constraintbased":
+                boolean consres = PlacementStrategies.constraintBased(vm, hostList);
+                if(consres){
+                        vmTable.put(vm.getUid(), vm.getHost());
+                        return true;
+                    }
+                return false;
+            case "resourceaware":
+                boolean awres = PlacementStrategies.resourceAwareGreedy(vm, hostList);
+                if(awres){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    return true;
+                    }
+                return false;
+            case "drf":
+                boolean drf = PlacementStrategies.dominantResourceFairness(vm, hostList);
+                if(drf){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    return true;
+                    }
+                return false;
+            case "threshold":
+                boolean thr = PlacementStrategies.thresholdBased(vm, hostList);
+                if(thr){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    return true;
+                    }
+                return false;
+            case "roundrobin":
+                boolean rrb = PlacementStrategies.roundRobinWithFilteringSingle(vm, hostList, rrIndex++);
+                if(rrb){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    return true;
+                }
+                return false;
+            case "pabfd":
+                boolean pabfd = PlacementStrategies.policyPABFD(vm, hostList);
+                if(pabfd){
+                    vmTable.put(vm.getUid(), vm.getHost());
+                    System.out.println("VM " + vm.getId() + " Placed on host: " + vm.getHost().getId() + " Using pabfd policy");
+                    return true;
+                }
+            default:
+                Log.printLine("Unknown strategy: " + strategy);
+                return false;
+        }
+    }
+  
+
+    
+    @Override
+    public boolean allocateHostForVm(Vm vm, Host host) {
+        if (host != null && host.isSuitableForVm(vm) && host.vmCreate(vm)) {
+            vmTable.put(vm.getUid(), host);
+            return true;
+        }
+        return false;
+    }
+    
+
+    @Override
+    public List<Map<String, Object>> optimizeAllocation(List<? extends Vm> vmList) {
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        
+        for(Host host : datacenter.getHostList()){
+            
+            for(Vm vm : host.getVmList()){
+
+                boolean util = mig.isHostUnderUtilized((PowerHost)host);
+                System.out.println(host.getId() + " is under utilized  " + util);
+               
+                if(util){
+                    PowerHost newHost = mig.findHostForVm(vm);
+                    System.out.println("new hos is " + newHost.getId());
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("vm", vm);
+                    entry.put("host", newHost);
+                    result.add(entry);
+                }
+
+                /*while (vm.getCloudletScheduler().isFinishedCloudlets()) {
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("vm", vm);
+                    entry.put("host", host);
+                    result.add(entry);
+                    Cloudlet cl = vm.getCloudletScheduler().getNextFinishedCloudlet();
+                    System.out.println("Cloudlet " + cl.getCloudletId() + " Finished" );
+                }
+            }*/
+        }
+
+
+
+        /*for(Vm vm : vmList){
+
+            for (Host host : getHostList()) {
+
+                if(host.isSuitableForVm(vm)){
+                    Map<String, Object> map = new HashMap<>();
+                    map.put(this.strategy, vm);
+                    result.add(map);
+                }
+            }
+        }*/
+    }
+        return result;
+        
+    }
+
+
+
+    
+    @Override
+    public void deallocateHostForVm(Vm vm) {
+        Host host = vmTable.remove(vm.getUid());
+        if (host != null) {
+            host.vmDestroy(vm);
+        }
+    }
+
+    @Override
+    public Host getHost(Vm vm) {
+        return vmTable.get(vm.getUid());
+    }
+
+    @Override
+    public Host getHost(int vmId, int userId) {
+        return vmTable.get(Vm.getUid(userId, vmId));
+    }
+    
+}
