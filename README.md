@@ -69,5 +69,4 @@ From the root ```modules/``` folder:
 ```mvn clean install```
 
 ### Run the Simulation
-```mvn exec:java -pl cloudsim-examples \
-  -Dexec.mainClass="org.cloudbus.cloudsim.examples.Experiment"```
+```mvn exec:java -pl cloudsim-examples \ -Dexec.mainClass="org.cloudbus.cloudsim.examples.Experiment"```
