@@ -20,11 +20,11 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
-import org.cloudbus.cloudsim.MyChange.MyPowerHost;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.core.predicates.PredicateType;
+import org.cloudbus.cloudsim.custom_implementation.CustomPowerHost;
 import org.cloudbus.cloudsim.vmplus.disk.HddCloudlet;
 import org.cloudbus.cloudsim.vmplus.disk.HddCloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.vmplus.disk.HddHost;
@@ -503,7 +503,7 @@ public class PowerDatacenter extends Datacenter {
 		this.power = power;
 	}
 
-	public void releaseEmptyHosts(MyPowerHost host) {
+	public void releaseEmptyHosts(CustomPowerHost host) {
         host.setPowerOn(false);
         Log.formatLine("%.2f: Host #%d is idle and can be turned off to save energy.",
                         CloudSim.clock(), host.getId());

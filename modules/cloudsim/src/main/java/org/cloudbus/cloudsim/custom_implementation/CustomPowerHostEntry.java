@@ -1,11 +1,11 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 import java.util.List;
 
 import org.cloudbus.cloudsim.power.PowerVm;
 import org.cloudbus.cloudsim.HostStateHistoryEntry;
 
-public class MyPowerHostEntry extends HostStateHistoryEntry {
+public class CustomPowerHostEntry extends HostStateHistoryEntry {
 
      private double allocatedRam;
     private double requestedRam;
@@ -25,7 +25,7 @@ public class MyPowerHostEntry extends HostStateHistoryEntry {
      * @param requestedMips the requested mips
      * @param isActive      the is active
      */
-    public MyPowerHostEntry(double time, double allocatedMips, double requestedMips, boolean isActive,
+    public CustomPowerHostEntry(double time, double allocatedMips, double requestedMips, boolean isActive,
                             double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, List<PeEntry> peEntries, List<PowerVm> vms, double ramUtilization, boolean powerOn) {
         super(time, allocatedMips, requestedMips, isActive);
 

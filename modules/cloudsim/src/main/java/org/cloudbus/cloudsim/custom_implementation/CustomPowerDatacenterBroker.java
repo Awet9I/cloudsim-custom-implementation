@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 /*
  * Title:        CloudSim Toolkit
@@ -33,7 +33,7 @@ import org.cloudbus.cloudsim.vmplus.disk.HddVm;
   * @author Anton Beloglazov
   * @since CloudSim Toolkit 2.0
   */
- public class MyPowerDatacenterBroker extends PowerDatacenterBroker {
+ public class CustomPowerDatacenterBroker extends PowerDatacenterBroker {
  
      /**
       * Instantiates a new PowerDatacenterBroker.
@@ -41,7 +41,7 @@ import org.cloudbus.cloudsim.vmplus.disk.HddVm;
       * @param name the name of the broker
       * @throws Exception the exception
       */
-     public MyPowerDatacenterBroker(String name) throws Exception {
+     public CustomPowerDatacenterBroker(String name) throws Exception {
          super(name);
      }
 
@@ -72,7 +72,7 @@ import org.cloudbus.cloudsim.vmplus.disk.HddVm;
 				if(vm instanceof HddVm){
 					Log.printLine(CloudSim.clock() + ": " + getName() + ": Trying to Create HDDVM #" + vm.getId()
 						+ " in " + datacenterName);
-				} else if(vm instanceof MyPowerVm){
+				} else if(vm instanceof CustomPowerVm){
 					Log.printLine(CloudSim.clock() + ": " + getName() + ": Trying to Create PoewrVM #" + vm.getId()
 						+ " in " + datacenterName);
 				}
@@ -89,7 +89,7 @@ import org.cloudbus.cloudsim.vmplus.disk.HddVm;
 	}
  
      /*
-      * fully overriden methos to create vm and submit cloudlets to them
+      * Fully overriden methos to create vm and submit cloudlets to them
       * enables resource aware vm allocation, 
       * waits for all vm creation treis to be processed to submit cloudlets
       */
@@ -150,13 +150,10 @@ import org.cloudbus.cloudsim.vmplus.disk.HddVm;
     
         // Estimate memory activity and log energy
         Vm vm = VmList.getById(getVmsCreatedList(), cloudlet.getVmId());
-        if (vm instanceof MyPowerVm) {
+        if (vm instanceof CustomPowerVm) {
             double duration = cloudlet.getFinishTime() - cloudlet.getExecStartTime();
-            ((MyPowerVm) vm).logCloudletMemoryUsage(cloudlet, duration, new PowerModelRamDataSheetBased());
+            ((CustomPowerVm) vm).logCloudletMemoryUsage(cloudlet, duration, new PowerModelRamDataSheetBased());
 
-            // refer to the ram model of the vm instead of creating a new ram power model, additionally pass allocated memory of the vm
-            //((MyPowerHost) vm.getHost()).getPowerModelRam();
-            //((MyPowerVm) vm).getRam();
         }
     
         //super.processCloudletReturn(ev); // continue default handling
@@ -233,7 +230,7 @@ import org.cloudbus.cloudsim.vmplus.disk.HddVm;
             }
         }
 
-		//Log.printConcatLine(getName(), ".processOtherEvent(): Error - event unknown by this DatacenterBroker.");
+		
 	}
 
 

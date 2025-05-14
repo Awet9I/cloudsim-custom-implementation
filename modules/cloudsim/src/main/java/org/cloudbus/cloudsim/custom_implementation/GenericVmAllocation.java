@@ -1,33 +1,26 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.checkerframework.checker.units.qual.t;
-import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
-import org.cloudbus.cloudsim.DatacenterBroker;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
-import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHost;
-import org.cloudbus.cloudsim.power.PowerVm;
 
-public class MyGenericVmAllocation extends VmAllocationPolicy {
+public class GenericVmAllocation extends VmAllocationPolicy {
     private final Map<String, Host> vmTable = new HashMap<>();
     private String strategy;
     private int rrIndex = 0; // for round robin
     private PowerDatacenter datacenter;
-    private MyPowerVmAllocationPolicyMigrationStaticThreshold mig;
+    private CustomPowerVmAllocationPolicyMigrationStaticThreshold mig;
     
 
-    public MyGenericVmAllocation(List<? extends Host> list, String initialStrategy, MyPowerVmAllocationPolicyMigrationStaticThreshold mig) {
+    public GenericVmAllocation(List<? extends Host> list, String initialStrategy, CustomPowerVmAllocationPolicyMigrationStaticThreshold mig) {
         super(list);
         this.strategy = initialStrategy.toLowerCase();
         this.mig = mig; // Migration treshold setter

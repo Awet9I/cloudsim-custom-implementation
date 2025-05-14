@@ -1,11 +1,11 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 import java.util.List;
 
 import org.cloudbus.cloudsim.ResCloudlet;
 import org.cloudbus.cloudsim.VmStateHistoryEntry;
 
-public class MyPowerVmEntry extends VmStateHistoryEntry {
+public class CustomPowerVmEntry extends VmStateHistoryEntry {
 
     private double allocatedRam;
     private double requestedRam;
@@ -28,7 +28,7 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
      * @param requestedMips the requested mips
      * @param isInMigration the is in migration
      */
-    public MyPowerVmEntry(double time, double allocatedMips, double requestedMips, boolean isInMigration,
+    public CustomPowerVmEntry(double time, double allocatedMips, double requestedMips, boolean isInMigration,
                           double allocatedRam, double requestedRam, double allocatedBw, double requestedBw, double allocatedStorage, double read, double write, double ramPower, double requestedBwFromCloudlet, double diskReadRate,
                           double diskWriteRate) {
         super(time, allocatedMips, requestedMips, isInMigration);
@@ -59,7 +59,7 @@ public class MyPowerVmEntry extends VmStateHistoryEntry {
  * @param requestedBw
  * @param allocatedStorage
  */
-    public MyPowerVmEntry(
+    public CustomPowerVmEntry(
         double time,
         double allocatedMips,
         double requestedMips,

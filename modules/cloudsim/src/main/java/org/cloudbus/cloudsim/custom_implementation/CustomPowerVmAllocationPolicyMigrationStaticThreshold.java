@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Vm;
@@ -8,7 +8,7 @@ import org.cloudbus.cloudsim.power.PowerVmSelectionPolicy;
 
 import java.util.List;
 
-public class MyPowerVmAllocationPolicyMigrationStaticThreshold extends PowerVmAllocationPolicyMigrationStaticThreshold {
+public class CustomPowerVmAllocationPolicyMigrationStaticThreshold extends PowerVmAllocationPolicyMigrationStaticThreshold {
     private double lowerUtilizationThreshold;
     /**
      * Instantiates a new PowerVmAllocationPolicyMigrationStaticThreshold.
@@ -17,7 +17,7 @@ public class MyPowerVmAllocationPolicyMigrationStaticThreshold extends PowerVmAl
      * @param vmSelectionPolicy    the vm selection policy
      * @param utilizationThreshold the utilization threshold
      */
-    public MyPowerVmAllocationPolicyMigrationStaticThreshold(List<? extends Host> hostList, PowerVmSelectionPolicy vmSelectionPolicy, double upperUtilizationThreshold, double lowerUtilizationThreshold) {
+    public CustomPowerVmAllocationPolicyMigrationStaticThreshold(List<? extends Host> hostList, PowerVmSelectionPolicy vmSelectionPolicy, double upperUtilizationThreshold, double lowerUtilizationThreshold) {
         super(hostList, vmSelectionPolicy, upperUtilizationThreshold);
         this.lowerUtilizationThreshold = lowerUtilizationThreshold;
 

@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 public class PowerModelStorageProbabilistic {
     

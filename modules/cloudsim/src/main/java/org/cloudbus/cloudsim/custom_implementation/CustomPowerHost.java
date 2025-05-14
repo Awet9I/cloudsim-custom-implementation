@@ -1,21 +1,18 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.power.PowerDatacenter;
-import org.cloudbus.cloudsim.power.PowerHost;
 import org.cloudbus.cloudsim.power.PowerHostUtilizationHistory;
 import org.cloudbus.cloudsim.power.PowerVm;
 import org.cloudbus.cloudsim.power.models.PowerModel;
-import org.cloudbus.cloudsim.power.models.PowerModelLinear;
 import org.cloudbus.cloudsim.provisioners.BwProvisioner;
 import org.cloudbus.cloudsim.provisioners.RamProvisioner;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
-public class MyPowerHost extends PowerHostUtilizationHistory {
+public class CustomPowerHost extends PowerHostUtilizationHistory {
     private long storageSize;
     private PowerModel raPowerModel;
     private MemoryBandwidthProvisioner memoryBandwidthProvisioner;
@@ -35,7 +32,7 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
      * @param vmScheduler    the VM scheduler
      * @param powerModel
      */
-    public MyPowerHost(int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler, PowerModel powerModel, PowerModel raPowerModel, MemoryBandwidthProvisioner memoryBandwidthProvisioner, NetworkPowerModel networkPowerModel, PowerModelStorageProbabilistic storageProbabilistic) {
+    public CustomPowerHost(int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage, List<? extends Pe> peList, VmScheduler vmScheduler, PowerModel powerModel, PowerModel raPowerModel, MemoryBandwidthProvisioner memoryBandwidthProvisioner, NetworkPowerModel networkPowerModel, PowerModelStorageProbabilistic storageProbabilistic) {
         super(id, ramProvisioner, bwProvisioner, storage, peList, vmScheduler, powerModel);
         this.storageSize = storage;
         this.raPowerModel = raPowerModel; 
@@ -52,8 +49,8 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
     @Override
     public boolean vmCreate(Vm vm) {
         boolean result = super.vmCreate(vm);
-        if (result && vm instanceof MyPowerVm) {
-            double[] bws = ((MyPowerVm) vm).getCurrentRequestedMemoryBandwidth();
+        if (result && vm instanceof CustomPowerVm) {
+            double[] bws = ((CustomPowerVm) vm).getCurrentRequestedMemoryBandwidth();
             if (!memoryBandwidthProvisioner.allocateBandwidthForVm(vm, bws[0], bws[1])) {
                 super.vmDestroy(vm);
                 return false;
@@ -93,17 +90,15 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
         }
 
         for (Vm vm : getVmList()) {
-            //int pes = vm.getNumberOfPes();
             double totalRequestedMips = vm.getCurrentRequestedTotalMips();
             double totalAllocatedMips = getVmScheduler().getTotalAllocatedMipsForVm(vm);
 
             double totalRequestedRam = vm.getCurrentRequestedRam();
-            double totalAllocatedRam = vm.getCurrentAllocatedRam();//getVmScheduler().getTotalAllocatedMipsForVm(vm);
-
+            double totalAllocatedRam = vm.getCurrentAllocatedRam();
             double totalRequestedBw = vm.getCurrentRequestedBw();
             double totalAllocatedBw = vm.getCurrentAllocatedBw();
 
-            double totalAllocatedStorage = vm.getSize(); // vm.getCurrentAllocatedSize();
+            double totalAllocatedStorage = vm.getSize(); 
 
             if (!Log.isDisabled()) {
                 Log.formatLine(
@@ -137,11 +132,11 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                     Log.formatLine("%.2f: [Host #" + getId() + "] Under allocated MIPS for VM #" + vm.getId()
                             + ": %.2f", CloudSim.clock(), totalRequestedMips - totalAllocatedMips);
                 }
-                if(vm instanceof MyPowerVm){
-                    double requestedBwFromCloudlet = ((MyPowerVm) vm).getCurrentRequestedBwFromCloudlet();
-                    double requestedDiskWriteRateFromCloudlet = ((MyPowerVm) vm).getCurrentRequestedDiskWritRateFromCloudlet();
-                    double requestedDiskReadRateFromCloudlet = ((MyPowerVm) vm).getCurrentRequestedDiskReadRateFromCloudlet();
-                    ((MyPowerVm) vm).addStateHistoryEntry(
+                if(vm instanceof CustomPowerVm){
+                    double requestedBwFromCloudlet = ((CustomPowerVm) vm).getCurrentRequestedBwFromCloudlet();
+                    double requestedDiskWriteRateFromCloudlet = ((CustomPowerVm) vm).getCurrentRequestedDiskWritRateFromCloudlet();
+                    double requestedDiskReadRateFromCloudlet = ((CustomPowerVm) vm).getCurrentRequestedDiskReadRateFromCloudlet();
+                    ((CustomPowerVm) vm).addStateHistoryEntry(
                             currentTime,
                             totalAllocatedMips,
                             totalRequestedMips,
@@ -169,7 +164,7 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
                     Log.formatLine(
                             "%.2f: [Host #" + getId() + "] VM #" + vm.getId() + " is in migration",
                             CloudSim.clock());
-                    totalAllocatedMips /= 0.9; // performance degradation due to migration - 10%
+                    totalAllocatedMips /= 0.9; 
                 }
             }
 
@@ -193,10 +188,10 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
         boolean isActive = (getUtilizationMips() > 0);
 
         PowerDatacenter dc = (PowerDatacenter) getDatacenter();
-        /**if(!isActive){
+        if(!isActive){
             dc.releaseEmptyHosts(this); 
             
-        }*/
+        }
         
 
         addStateHistoryEntry(
@@ -242,7 +237,7 @@ public class MyPowerHost extends PowerHostUtilizationHistory {
 
         double getRamUtilization = getRamUtilization(allocatedRam, getRamProvisioner().getRam());
 
-        MyPowerHostEntry newState = new MyPowerHostEntry(
+        CustomPowerHostEntry newState = new CustomPowerHostEntry(
                 time,
                 allocatedMips,
                 requestedMips,

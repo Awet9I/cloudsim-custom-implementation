@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.MyChange;
+package org.cloudbus.cloudsim.custom_implementation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,6 @@ import java.util.List;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
-import org.cloudbus.cloudsim.lists.VmList;
 import org.cloudbus.cloudsim.power.PowerHost;
 import org.cloudbus.cloudsim.power.PowerVm;
 
@@ -219,7 +218,7 @@ public class PlacementStrategies {
         // Save the current utilization and state
         double powerBefore = powerHost.getPower();
 
-        MyPowerHost myPowerHost = (MyPowerHost) powerHost;
+        CustomPowerHost myPowerHost = (CustomPowerHost) powerHost;
         double ramPowerBefore = myPowerHost.getPowerModelRam().getPower(powerHost.getRamProvisioner().getRam() - powerHost.getRamProvisioner().getAvailableRam()/powerHost.getRamProvisioner().getRam());
         
 
