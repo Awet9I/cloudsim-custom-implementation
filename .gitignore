@@ -2,8 +2,8 @@
 *
 
 # Do NOT ignore these specific files
-!analysis/Experiment 1/EX1__cpu_dvfs.ipynb
-!logs/exp1/cpu_dvfs.csv
+!analysis/
+!logs/
 !modules/cloudsim/src/main/java/org/cloudbus/cloudsim/custom_implementation/
 !modules/cloudsim/src/main/java/org/cloudbus/cloudsim/custom_implementation/CustomVmList.java
 !modules/cloudsim/src/main/java/org/cloudbus/cloudsim/custom_implementation/NetworkPowerModel.java
